@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="运行环境、练习方法与验证边界。">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>阅读与练习指南 · LiquidHaskell 中文教程</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>try{const t=localStorage.getItem('lh-cn-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}</script>
+  <script src="search-index.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-page="guide">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar"><div class="topbar-inner">
+    <button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开章节导航" aria-controls="chapter-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">λ</span><span>LiquidHaskell <span class="brand-language">中文教程</span></span></a>
+    <div class="top-actions"><button class="search-button" data-open-search aria-label="搜索教程"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><span>搜索教程</span><kbd>Ctrl K</kbd></button><button class="icon-button" id="theme-toggle" aria-label="切换明暗主题" title="切换明暗主题"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.1A8.7 8.7 0 0 1 10.9 3.5 8.7 8.7 0 1 0 20.5 13.1Z"/></svg></button><a class="repo-link" href="https://github.com/longlong921/liquidhaskell-cn">GitHub <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+  </div></header>
+  <div class="layout "><aside class="sidebar" id="chapter-navigation" aria-label="教程导航">
+    <a class="sidebar-home " href="index.html"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/></svg> 阅读首页</a>
+    <div class="nav-group"><p class="nav-label">I · 精化类型</p><ol start="1"><li><a href="Tutorial_01_Introduction.html" ><span class="nav-number">01</span><span>引言</span></a></li><li><a href="Tutorial_02_Logic.html" ><span class="nav-number">02</span><span>逻辑与 SMT</span></a></li><li><a href="Tutorial_03_Basic.html" ><span class="nav-number">03</span><span>精化类型</span></a></li><li><a href="Tutorial_04_Polymorphism.html" ><span class="nav-number">04</span><span>多态</span></a></li><li><a href="Tutorial_05_Datatypes.html" ><span class="nav-number">05</span><span>精化数据类型</span></a></li></ol></div><div class="nav-group"><p class="nav-label">II · 度量函数</p><ol start="6"><li><a href="Tutorial_06_Measure_Bool.html" ><span class="nav-number">06</span><span>布尔度量</span></a></li><li><a href="Tutorial_07_Measure_Int.html" ><span class="nav-number">07</span><span>数值度量</span></a></li><li><a href="Tutorial_08_Measure_Set.html" ><span class="nav-number">08</span><span>集合度量</span></a></li></ol></div><div class="nav-group"><p class="nav-label">III · 完整案例</p><ol start="9"><li><a href="Tutorial_09_Case_Study_Lazy_Queues.html" ><span class="nav-number">09</span><span>惰性队列</span></a></li><li><a href="Tutorial_10_Case_Study_Associative_Maps.html" ><span class="nav-number">10</span><span>键值映射</span></a></li><li><a href="Tutorial_11_Case_Study_Pointers.html" ><span class="nav-number">11</span><span>指针与字节</span></a></li><li><a href="Tutorial_12_Case_Study_AVL.html" ><span class="nav-number">12</span><span>AVL 树</span></a></li></ol></div>
+    <div class="nav-extras"><a href="guide.html" aria-current="page" class="active">阅读与练习指南</a><a href="glossary.html" >中英术语表</a><a href="about.html" >译本说明与来源</a></div>
+    <div class="sidebar-note"><span class="status-dot"></span>12 章完整译文<br><small>原文示例 · 练习 · 译者说明</small></div>
+  </aside><main id="main-content" tabindex="-1"><header class="chapter-header"><p class="eyebrow">阅读辅助</p><h1>阅读与练习指南</h1><p class="chapter-subtitle">运行环境、练习方法与验证边界。</p></header><article class="prose"><span class="chapter-anchor" id="阅读与练习指南"></span>
+<p>这份教程适合已经能阅读简单 Haskell 程序、想进一步理解「怎样把正确性条件交给工具检查」的读者。你不必先学会依赖类型，也不必先成为逻辑学专家。第 2 章会补上需要的逻辑知识。</p>
+<blockquote>
+<p><strong>译者说明</strong>：本页是中文译本新增的阅读辅助，不属于英文原著。教程正文中的代码和练习保留上游原貌；其中有些代码就是要让验证器报错。</p>
+</blockquote>
+<h2 id="reading-order">怎样安排阅读顺序<a class="heading-anchor" href="#reading-order" aria-label="链接到怎样安排阅读顺序">#</a></h2>
+<p>第一次阅读，建议按章节顺序走。每一部分都在回答一个具体问题：</p>
+<table>
+<thead>
+<tr>
+<th>部分</th>
+<th>要解决的问题</th>
+<th>读完后应该能做什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第 1–5 章：精化类型</td>
+<td>普通类型之外，还能表达什么？</td>
+<td>读懂精化类型，给函数写前置条件、后置条件和数据结构不变量</td>
+</tr>
+<tr>
+<td>第 6–8 章：度量函数</td>
+<td>验证器怎样理解列表等递归结构？</td>
+<td>描述是否为空、长度是多少、包含哪些元素</td>
+</tr>
+<tr>
+<td>第 9–12 章：案例</td>
+<td>这些工具怎样一起工作？</td>
+<td>跟着队列、映射、字节与 AVL 树，理解较大程序的规格与证明边界</td>
+</tr>
+</tbody></table>
+<p>如果你只想先建立直觉，可以读第 1、3 章，再返回第 2 章。看到不熟悉的术语时，打开<a href="glossary.html">术语表</a>；需要核对措辞时，每章标题下都有英文原文入口。</p>
+<h2 id="environment">运行前，先确认环境<a class="heading-anchor" href="#environment" aria-label="链接到运行前，先确认环境">#</a></h2>
+<p><strong>阅读网页不需要安装 Haskell。</strong> 下载仓库后，直接打开 <code>docs/index.html</code> 就能阅读，章节导航、搜索、主题切换均在浏览器本地工作。网页里的代码块用于阅读和复制，不是在线编译器。</p>
+<p>实际做练习时，需要分别确认以下几件事：</p>
+<ol>
+<li><strong>GHC 与 LiquidHaskell 的版本是否配套。</strong> LiquidHaskell 作为 GHC 插件工作，不能假设任意 GHC 版本都兼容。先查<a href="https://ucsd-progsys.github.io/liquidhaskell/install/">官方安装页</a>列出的组合，再选对应的示例项目。</li>
+<li><strong>SMT 求解器是否可用。</strong> 官方安装页推荐 Z3，并要求求解器程序可以从 <code>PATH</code> 找到。安装 GHC 或 HLS，并不等于已经安装求解器。</li>
+<li><strong>项目是否真正启用了插件。</strong> 依赖声明、模块中的插件选项以及相关库的精化规格，都要按照官方示例配置。普通 GHC 编译成功与 LiquidHaskell 检查成功是不同的结果。</li>
+<li><strong>教程与依赖是否属于同一个时代。</strong> 引言中的操作流程有明确的历史背景，上游 README 也提示在线 HTML/PDF 可能落后于源码。旧接口、旧包版本或旧命令需要结合实际环境核对。</li>
+</ol>
+<p>可先查看本机版本：</p>
+<div class="code-block"><div class="code-toolbar"><span>Shell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-bash">ghc --version
+cabal --version
+z3 --version
+</code></pre></div>
+<p>然后按<a href="https://ucsd-progsys.github.io/liquidhaskell/install/">官方安装说明</a>和<a href="https://github.com/ucsd-progsys/lh-plugin-demo">官方插件示例项目</a>选择构建方案。本译本没有给出未经实测的「一条命令兼容所有版本」安装脚本，也没有重新声明某个历史组合是当前推荐环境。</p>
+<h3 id="original-examples">原始示例在哪里？<a class="heading-anchor" href="#original-examples" aria-label="链接到原始示例在哪里？">#</a></h3>
+<p>每章的「下载原始示例」链接提供上游 <code>.lhs</code> 文件。<code>.lhs</code> 是 literate Haskell，即把文字和程序写在同一文件里的格式。</p>
+<p>这些文件用于对照和练习，<strong>不是一套已经补完答案、保证整体通过的现代工程模板</strong>。代码中可能有：</p>
+<ul>
+<li>演示验证失败的表达式；</li>
+<li>等待填写的规格、<code>undefined</code> 或 <code>error</code>；</li>
+<li>为聚焦某个概念而关闭的检查；</li>
+<li>不在网页正文中展示的导入、辅助定义或历史配置。</li>
+</ul>
+<p>正文省略了上游明确标为隐藏的 <code>comment</code> 区块。完整原始文件仍保留这些内容，因此阅读片段与直接编译完整模块的行为可能不同。</p>
+<h2 id="exercises">怎样做一道练习<a class="heading-anchor" href="#exercises" aria-label="链接到怎样做一道练习">#</a></h2>
+<p>建议把每道练习分成四步：</p>
+<ol>
+<li><strong>先用中文写下要证明的事。</strong> 例如：「索引不能小于 0，而且必须小于向量长度。」</li>
+<li><strong>指出哪些信息来自调用者。</strong> 这些通常对应前置条件；外部输入需要经过运行时校验才能满足它们。</li>
+<li><strong>写出函数答应提供的信息。</strong> 例如返回列表长度等于输入长度；这通常对应后置条件。</li>
+<li><strong>让验证器检查，再解释结果。</strong> 如果失败，区分实现错误、规格错误、缺少引理，以及工具暂时无法自动推导的事实。</li>
+</ol>
+<p>不要用 <code>assume</code> 掩盖尚未解决的证明，也不要只为让检查变绿而删除目标性质。一个能通过的弱规格，可能没有表达你真正关心的事情。</p>
+<p>原文中的练习题保留待完成状态。本译本没有把猜测的答案混入原代码。如果以后添加参考答案，应当放在独立位置，并说明验证过的工具链和命令。</p>
+<h2 id="guarantees">怎样理解「验证通过」<a class="heading-anchor" href="#guarantees" aria-label="链接到怎样理解「验证通过」">#</a></h2>
+<p>验证通过的意思是：<strong>在采用的模型、假设和输入前提下，工具接受了你写出的那些性质。</strong> 它不自动涵盖所有业务要求或运行环境故障。</p>
+<table>
+<thead>
+<tr>
+<th>阅读时要辨认的东西</th>
+<th>它实际意味着什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>assume</code></td>
+<td>把一个规格加入可信基础；不能据此说对应实现已经被证明</td>
+</tr>
+<tr>
+<td><code>--no-termination</code></td>
+<td>关闭终止性检查；一个可能不返回的函数不能因此被称为一定结束</td>
+</tr>
+<tr>
+<td>数学整数模型</td>
+<td>推理中的整数未必覆盖机器 <code>Int</code> 的溢出行为；参阅<a href="https://ucsd-progsys.github.io/liquidhaskell/blogposts/2017-03-20-arithmetic-overflows.lhs/">官方整数溢出说明</a></td>
+</tr>
+<tr>
+<td>元素集合相等</td>
+<td>说明出现过哪些不同元素；不记录每个元素重复了几次</td>
+</tr>
+<tr>
+<td>指针的范围规格</td>
+<td>只覆盖实际写出的内存模型与条件；不能自动替代底层实现、生命周期和其他未建模要求</td>
+</tr>
+</tbody></table>
+<p>因此，外部输入验证、集成测试、异常路径测试和规格审阅仍然各有职责。对于内部纯函数，可以用明确规格证明适合形式化的性质；是否减少已有测试，要根据性质覆盖和可信边界判断。</p>
+<h2 id="historical-apis">旧示例与当前 API<a class="heading-anchor" href="#historical-apis" aria-label="链接到旧示例与当前 API">#</a></h2>
+<p>教程用旧版 <code>text</code> / <code>vector</code> 接口展示：类型正确并不等于输入范围正确。这些示例的核心教学意义仍然清晰，但具体崩溃方式、返回字节和内部表示属于当时的实现背景。</p>
+<p>例如 <code>text</code> 的内部编码后来发生过变化，详见其<a href="https://github.com/haskell/text/blob/master/changelog.md">官方变更记录</a>。本译本保留原输出作为历史材料，不把它描述成当前版本一定可以重现的漏洞。</p>
+<h2 id="website-tips">网页使用小技巧<a class="heading-anchor" href="#website-tips" aria-label="链接到网页使用小技巧">#</a></h2>
+<ul>
+<li>点击顶部搜索，或按 <code>Ctrl+K</code> / <code>⌘+K</code>；没有在输入框中输入时，也可以按 <code>/</code>。</li>
+<li>搜索同时支持中文术语、英文术语和代码名称；多个关键词用空格分隔。</li>
+<li>按 <code>Esc</code> 关闭搜索，使用方向键在结果间移动。</li>
+<li>代码块右上角可以复制代码；浏览器拒绝剪贴板访问时会选中代码，供手动复制。</li>
+<li>页面会在当前浏览器记住最近阅读的章节，首页会显示「继续阅读」。此记录仅存于本地。</li>
+<li>浏览器的打印功能可导出当前页；打印样式会隐藏导航和操作按钮。</li>
+</ul>
+</article><footer class="page-footer"><p>原著 Ranjit Jhala 与贡献者 · 中文翻译与讲解</p><p><a href="about.html">来源与译本说明</a><span>·</span><a href="LICENSE">MIT License</a><span>·</span><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_01_Introduction.html">英文教程</a></p></footer></main><aside class="toc" aria-label="本页目录"><p>本页内容</p><nav><a class="toc-depth-2" href="#reading-order">怎样安排阅读顺序</a><a class="toc-depth-2" href="#environment">运行前，先确认环境</a><a class="toc-depth-3" href="#original-examples">原始示例在哪里？</a><a class="toc-depth-2" href="#exercises">怎样做一道练习</a><a class="toc-depth-2" href="#guarantees">怎样理解「验证通过」</a><a class="toc-depth-2" href="#historical-apis">旧示例与当前 API</a><a class="toc-depth-2" href="#website-tips">网页使用小技巧</a></nav><a class="back-top" href="#main-content">回到顶部 ↑</a></aside></div>
+  <button class="nav-backdrop" id="nav-backdrop" aria-label="关闭章节导航" tabindex="-1" hidden></button>
+  <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><h2 id="search-title">搜索教程</h2><button class="dialog-close" id="search-close" aria-label="关闭搜索">Esc</button></div><label for="search-input" class="sr-only">输入中文、英文或代码名称</label><div class="search-input-wrap"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><input id="search-input" type="search" placeholder="试试「不变量」、measure、ByteString…" autocomplete="off"></div><p class="search-status" id="search-status" role="status">搜索全部章节与术语；多个关键词用空格分隔。</p><ol id="search-results" class="search-results"></ol></dialog>
+  <div class="sr-only" id="live-status" aria-live="polite"></div>
+</body>
+</html>

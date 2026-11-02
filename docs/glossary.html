@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="精化类型与程序验证中的常用术语。">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>中英术语表 · LiquidHaskell 中文教程</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>try{const t=localStorage.getItem('lh-cn-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}</script>
+  <script src="search-index.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-page="glossary">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar"><div class="topbar-inner">
+    <button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开章节导航" aria-controls="chapter-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">λ</span><span>LiquidHaskell <span class="brand-language">中文教程</span></span></a>
+    <div class="top-actions"><button class="search-button" data-open-search aria-label="搜索教程"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><span>搜索教程</span><kbd>Ctrl K</kbd></button><button class="icon-button" id="theme-toggle" aria-label="切换明暗主题" title="切换明暗主题"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.1A8.7 8.7 0 0 1 10.9 3.5 8.7 8.7 0 1 0 20.5 13.1Z"/></svg></button><a class="repo-link" href="https://github.com/longlong921/liquidhaskell-cn">GitHub <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+  </div></header>
+  <div class="layout "><aside class="sidebar" id="chapter-navigation" aria-label="教程导航">
+    <a class="sidebar-home " href="index.html"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/></svg> 阅读首页</a>
+    <div class="nav-group"><p class="nav-label">I · 精化类型</p><ol start="1"><li><a href="Tutorial_01_Introduction.html" ><span class="nav-number">01</span><span>引言</span></a></li><li><a href="Tutorial_02_Logic.html" ><span class="nav-number">02</span><span>逻辑与 SMT</span></a></li><li><a href="Tutorial_03_Basic.html" ><span class="nav-number">03</span><span>精化类型</span></a></li><li><a href="Tutorial_04_Polymorphism.html" ><span class="nav-number">04</span><span>多态</span></a></li><li><a href="Tutorial_05_Datatypes.html" ><span class="nav-number">05</span><span>精化数据类型</span></a></li></ol></div><div class="nav-group"><p class="nav-label">II · 度量函数</p><ol start="6"><li><a href="Tutorial_06_Measure_Bool.html" ><span class="nav-number">06</span><span>布尔度量</span></a></li><li><a href="Tutorial_07_Measure_Int.html" ><span class="nav-number">07</span><span>数值度量</span></a></li><li><a href="Tutorial_08_Measure_Set.html" ><span class="nav-number">08</span><span>集合度量</span></a></li></ol></div><div class="nav-group"><p class="nav-label">III · 完整案例</p><ol start="9"><li><a href="Tutorial_09_Case_Study_Lazy_Queues.html" ><span class="nav-number">09</span><span>惰性队列</span></a></li><li><a href="Tutorial_10_Case_Study_Associative_Maps.html" ><span class="nav-number">10</span><span>键值映射</span></a></li><li><a href="Tutorial_11_Case_Study_Pointers.html" ><span class="nav-number">11</span><span>指针与字节</span></a></li><li><a href="Tutorial_12_Case_Study_AVL.html" ><span class="nav-number">12</span><span>AVL 树</span></a></li></ol></div>
+    <div class="nav-extras"><a href="guide.html" >阅读与练习指南</a><a href="glossary.html" aria-current="page" class="active">中英术语表</a><a href="about.html" >译本说明与来源</a></div>
+    <div class="sidebar-note"><span class="status-dot"></span>12 章完整译文<br><small>原文示例 · 练习 · 译者说明</small></div>
+  </aside><main id="main-content" tabindex="-1"><header class="chapter-header"><p class="eyebrow">阅读辅助</p><h1>中英术语表</h1><p class="chapter-subtitle">精化类型与程序验证中的常用术语。</p></header><article class="prose"><span class="chapter-anchor" id="中英术语表"></span>
+<p>第一次遇到术语时，先抓住它回答的问题，再记住英文名称。下表的解释是中文译本新增的学习辅助；精确定义仍以相应章节中的逻辑和规格为准。</p>
+<h2 id="types">类型与规格<a class="heading-anchor" href="#types" aria-label="链接到类型与规格">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>英文</th>
+<th>中文</th>
+<th>通俗解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>refinement type</td>
+<td>精化类型</td>
+<td>在普通类型上再加一个条件，只允许满足条件的值</td>
+</tr>
+<tr>
+<td>predicate</td>
+<td>谓词</td>
+<td>对一个值提出的真假判断，例如「大于零」</td>
+</tr>
+<tr>
+<td>value variable</td>
+<td>值变量</td>
+<td>精化类型中代表当前值的变量，常写作 <code>v</code></td>
+</tr>
+<tr>
+<td>specification / spec</td>
+<td>规格</td>
+<td>用明确的语言写下程序必须满足什么</td>
+</tr>
+<tr>
+<td>contract</td>
+<td>契约</td>
+<td>调用者和被调用函数之间关于输入、输出的约定</td>
+</tr>
+<tr>
+<td>precondition</td>
+<td>前置条件</td>
+<td>调用函数之前必须成立的条件</td>
+</tr>
+<tr>
+<td>postcondition</td>
+<td>后置条件</td>
+<td>函数返回时承诺成立的条件</td>
+</tr>
+<tr>
+<td>invariant</td>
+<td>不变量</td>
+<td>在约定的范围内始终成立、操作需要维护的性质</td>
+</tr>
+<tr>
+<td>subtype / subtyping</td>
+<td>子类型 / 子类型关系</td>
+<td>一个类型允许的值更少，因此能放到要求更宽松类型的位置</td>
+</tr>
+<tr>
+<td>type alias</td>
+<td>类型别名</td>
+<td>给一个类型起可复用的名字</td>
+</tr>
+<tr>
+<td>dependent function type</td>
+<td>依赖函数类型</td>
+<td>输出类型中的条件可以提到具体输入值</td>
+</tr>
+<tr>
+<td>polymorphism</td>
+<td>多态</td>
+<td>同一份代码可以用于不同类型，并保留相应的类型信息</td>
+</tr>
+<tr>
+<td>abstract refinement</td>
+<td>抽象精化</td>
+<td>把某个谓词本身抽象为参数，供不同使用场景实例化</td>
+</tr>
+<tr>
+<td>smart constructor</td>
+<td>智能构造函数</td>
+<td>通过受控入口构造值，检查或保证结构必须满足的条件</td>
+</tr>
+</tbody></table>
+<p>相关章节：<a href="Tutorial_03_Basic.html">精化类型</a>、<a href="Tutorial_04_Polymorphism.html">多态</a>、<a href="Tutorial_05_Datatypes.html">精化数据类型</a>。</p>
+<h2 id="logic">逻辑与证明<a class="heading-anchor" href="#logic" aria-label="链接到逻辑与证明">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>英文</th>
+<th>中文</th>
+<th>通俗解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>proposition</td>
+<td>命题</td>
+<td>一个可以讨论真假的陈述</td>
+</tr>
+<tr>
+<td>conjunction</td>
+<td>合取</td>
+<td>「并且」；两边都要成立</td>
+</tr>
+<tr>
+<td>disjunction</td>
+<td>析取</td>
+<td>「或者」；至少一边成立</td>
+</tr>
+<tr>
+<td>negation</td>
+<td>否定</td>
+<td>「不是」；把真假取反</td>
+</tr>
+<tr>
+<td>implication</td>
+<td>蕴含</td>
+<td>「如果 P，那么 Q」；只有 P 真且 Q 假时不成立</td>
+</tr>
+<tr>
+<td>equivalence</td>
+<td>等价</td>
+<td>两个命题具有相同的真假值</td>
+</tr>
+<tr>
+<td>universal quantification</td>
+<td>全称量化</td>
+<td>条件针对所有允许的取值成立</td>
+</tr>
+<tr>
+<td>satisfiable</td>
+<td>可满足</td>
+<td>至少存在一种变量赋值，使整个公式为真</td>
+</tr>
+<tr>
+<td>valid</td>
+<td>有效</td>
+<td>对所有允许的变量赋值，公式都为真</td>
+</tr>
+<tr>
+<td>counterexample</td>
+<td>反例</td>
+<td>一种使声称成立的性质失败的具体情况</td>
+</tr>
+<tr>
+<td>SMT solver</td>
+<td>SMT 求解器</td>
+<td>针对选定逻辑理论，判断公式是否可满足的工具</td>
+</tr>
+<tr>
+<td>verification condition / VC</td>
+<td>验证条件</td>
+<td>为了证明程序满足规格，工具需要检查的逻辑公式</td>
+</tr>
+<tr>
+<td>uninterpreted function</td>
+<td>未解释函数</td>
+<td>不展开实现，只利用「相同输入产生相同输出」等逻辑规则的函数符号</td>
+</tr>
+<tr>
+<td>lemma</td>
+<td>引理</td>
+<td>为更大的证明提供帮助的小结论</td>
+</tr>
+<tr>
+<td>assumption</td>
+<td>假设</td>
+<td>推理时作为前提使用的陈述；并不一定在当前证明中验证</td>
+</tr>
+<tr>
+<td>trusted computing base / TCB</td>
+<td>可信计算基础</td>
+<td>整个结论需要信任、却未由当前验证过程本身证明的部分</td>
+</tr>
+<tr>
+<td>termination</td>
+<td>终止性</td>
+<td>程序会不会最终结束，而不是永远递归或循环</td>
+</tr>
+<tr>
+<td>partial correctness</td>
+<td>部分正确性</td>
+<td>如果程序返回，那么结果满足约定；本身不承诺一定返回</td>
+</tr>
+</tbody></table>
+<p>相关章节：<a href="Tutorial_02_Logic.html">逻辑与 SMT</a>、<a href="Tutorial_11_Case_Study_Pointers.html">指针与字节</a>。</p>
+<h2 id="data">度量与数据结构<a class="heading-anchor" href="#data" aria-label="链接到度量与数据结构">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>英文</th>
+<th>中文</th>
+<th>通俗解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>measure</td>
+<td>度量函数</td>
+<td>把数据结构的某个可描述属性暴露给逻辑，例如是否为空、长度或元素集合</td>
+</tr>
+<tr>
+<td>Boolean measure</td>
+<td>布尔度量函数</td>
+<td>结果是布尔值的度量，例如「这个列表为空吗？」</td>
+</tr>
+<tr>
+<td>numeric measure</td>
+<td>数值度量函数</td>
+<td>结果是数值的度量，例如列表长度</td>
+</tr>
+<tr>
+<td>set / elemental measure</td>
+<td>集合 / 元素度量函数</td>
+<td>用集合描述数据结构中出现了哪些元素</td>
+</tr>
+<tr>
+<td>partial function</td>
+<td>部分函数</td>
+<td>只对部分输入有定义或能正常工作，例如空列表上的 <code>head</code></td>
+</tr>
+<tr>
+<td>total function</td>
+<td>全函数</td>
+<td>在其声明的输入范围内都给出定义；还须注意所讨论的终止性模型</td>
+</tr>
+<tr>
+<td>sparse vector</td>
+<td>稀疏向量</td>
+<td>仅记录少量非零位置及其值的向量表示</td>
+</tr>
+<tr>
+<td>dimension</td>
+<td>维度</td>
+<td>向量长度或矩阵行列数等形状信息</td>
+</tr>
+<tr>
+<td>nondecreasing</td>
+<td>非递减</td>
+<td>后面的值不小于前面的值，允许相等</td>
+</tr>
+<tr>
+<td>set</td>
+<td>集合</td>
+<td>只关心元素是否出现，忽略顺序和重复次数</td>
+</tr>
+<tr>
+<td>multiset / bag</td>
+<td>多重集合</td>
+<td>除了元素是否出现，还记录每个元素出现了多少次</td>
+</tr>
+<tr>
+<td>permutation</td>
+<td>排列</td>
+<td>元素可以换顺序，但每个元素的出现次数保持不变</td>
+</tr>
+<tr>
+<td>zipper</td>
+<td>拉链结构</td>
+<td>把数据拆成当前位置及周围上下文，便于局部移动和修改</td>
+</tr>
+<tr>
+<td>amortized complexity</td>
+<td>摊还复杂度</td>
+<td>把一系列操作的总成本分摊到各次操作上；不等于每一步成本都相同</td>
+</tr>
+<tr>
+<td>binary search tree / BST</td>
+<td>二叉搜索树</td>
+<td>用左右子树与根之间的大小关系组织数据的树</td>
+</tr>
+<tr>
+<td>AVL tree</td>
+<td>AVL 树</td>
+<td>在搜索树之上维持高度平衡条件的数据结构</td>
+</tr>
+<tr>
+<td>functional correctness</td>
+<td>功能正确性</td>
+<td>结果符合规定的功能含义，例如插入后恰好增加指定元素</td>
+</tr>
+</tbody></table>
+<p>相关章节：<a href="Tutorial_06_Measure_Bool.html">布尔度量</a>、<a href="Tutorial_07_Measure_Int.html">数值度量</a>、<a href="Tutorial_08_Measure_Set.html">集合度量</a>、<a href="Tutorial_12_Case_Study_AVL.html">AVL 树</a>。</p>
+<h2 id="reading-a-type">如何读一条精化类型<a class="heading-anchor" href="#reading-a-type" aria-label="链接到如何读一条精化类型">#</a></h2>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type NonZero = {v:Int | v /= 0} @-}
+</code></pre></div>
+<p>依次读作：「给这个类型起名叫 <code>NonZero</code>；里面的值 <code>v</code> 是一个 <code>Int</code>；而且 <code>v</code> 不等于 <code>0</code>。」</p>
+<p><code>{-@ ... @-}</code> 对普通 Haskell 编译器来说是注释；LiquidHaskell 会读取其中的规格。普通编译没有报错，并不能说明这条规格已经经过检查。</p>
+</article><footer class="page-footer"><p>原著 Ranjit Jhala 与贡献者 · 中文翻译与讲解</p><p><a href="about.html">来源与译本说明</a><span>·</span><a href="LICENSE">MIT License</a><span>·</span><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_01_Introduction.html">英文教程</a></p></footer></main><aside class="toc" aria-label="本页目录"><p>本页内容</p><nav><a class="toc-depth-2" href="#types">类型与规格</a><a class="toc-depth-2" href="#logic">逻辑与证明</a><a class="toc-depth-2" href="#data">度量与数据结构</a><a class="toc-depth-2" href="#reading-a-type">如何读一条精化类型</a></nav><a class="back-top" href="#main-content">回到顶部 ↑</a></aside></div>
+  <button class="nav-backdrop" id="nav-backdrop" aria-label="关闭章节导航" tabindex="-1" hidden></button>
+  <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><h2 id="search-title">搜索教程</h2><button class="dialog-close" id="search-close" aria-label="关闭搜索">Esc</button></div><label for="search-input" class="sr-only">输入中文、英文或代码名称</label><div class="search-input-wrap"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><input id="search-input" type="search" placeholder="试试「不变量」、measure、ByteString…" autocomplete="off"></div><p class="search-status" id="search-status" role="status">搜索全部章节与术语；多个关键词用空格分隔。</p><ol id="search-results" class="search-results"></ol></dialog>
+  <div class="sr-only" id="live-status" aria-live="polite"></div>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="用谓词表达前置条件、后置条件和子类型关系。">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>3. 精化类型 · LiquidHaskell 中文教程</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>try{const t=localStorage.getItem('lh-cn-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}</script>
+  <script src="search-index.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-page="Tutorial_03_Basic">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar"><div class="topbar-inner">
+    <button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开章节导航" aria-controls="chapter-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">λ</span><span>LiquidHaskell <span class="brand-language">中文教程</span></span></a>
+    <div class="top-actions"><button class="search-button" data-open-search aria-label="搜索教程"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><span>搜索教程</span><kbd>Ctrl K</kbd></button><button class="icon-button" id="theme-toggle" aria-label="切换明暗主题" title="切换明暗主题"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.1A8.7 8.7 0 0 1 10.9 3.5 8.7 8.7 0 1 0 20.5 13.1Z"/></svg></button><a class="repo-link" href="https://github.com/longlong921/liquidhaskell-cn">GitHub <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+  </div></header>
+  <div class="layout "><aside class="sidebar" id="chapter-navigation" aria-label="教程导航">
+    <a class="sidebar-home " href="index.html"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/></svg> 阅读首页</a>
+    <div class="nav-group"><p class="nav-label">I · 精化类型</p><ol start="1"><li><a href="Tutorial_01_Introduction.html" ><span class="nav-number">01</span><span>引言</span></a></li><li><a href="Tutorial_02_Logic.html" ><span class="nav-number">02</span><span>逻辑与 SMT</span></a></li><li><a href="Tutorial_03_Basic.html" aria-current="page" class="active"><span class="nav-number">03</span><span>精化类型</span></a></li><li><a href="Tutorial_04_Polymorphism.html" ><span class="nav-number">04</span><span>多态</span></a></li><li><a href="Tutorial_05_Datatypes.html" ><span class="nav-number">05</span><span>精化数据类型</span></a></li></ol></div><div class="nav-group"><p class="nav-label">II · 度量函数</p><ol start="6"><li><a href="Tutorial_06_Measure_Bool.html" ><span class="nav-number">06</span><span>布尔度量</span></a></li><li><a href="Tutorial_07_Measure_Int.html" ><span class="nav-number">07</span><span>数值度量</span></a></li><li><a href="Tutorial_08_Measure_Set.html" ><span class="nav-number">08</span><span>集合度量</span></a></li></ol></div><div class="nav-group"><p class="nav-label">III · 完整案例</p><ol start="9"><li><a href="Tutorial_09_Case_Study_Lazy_Queues.html" ><span class="nav-number">09</span><span>惰性队列</span></a></li><li><a href="Tutorial_10_Case_Study_Associative_Maps.html" ><span class="nav-number">10</span><span>键值映射</span></a></li><li><a href="Tutorial_11_Case_Study_Pointers.html" ><span class="nav-number">11</span><span>指针与字节</span></a></li><li><a href="Tutorial_12_Case_Study_AVL.html" ><span class="nav-number">12</span><span>AVL 树</span></a></li></ol></div>
+    <div class="nav-extras"><a href="guide.html" >阅读与练习指南</a><a href="glossary.html" >中英术语表</a><a href="about.html" >译本说明与来源</a></div>
+    <div class="sidebar-note"><span class="status-dot"></span>12 章完整译文<br><small>原文示例 · 练习 · 译者说明</small></div>
+  </aside><main id="main-content" tabindex="-1"><div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div><header class="chapter-header"><p class="eyebrow">第 03 章 <span>/</span> 精化类型</p><h1>精化类型</h1><p class="chapter-subtitle">给类型加上可验证的条件</p><div class="chapter-links"><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_03_Basic.html">对照英文原文 ↗</a><a href="examples/Tutorial_03_Basic.lhs" download>下载原始示例 ↓</a></div></header><div class="reading-note"><strong>阅读提示</strong> 代码与练习保留原貌；标为「译者说明」的内容是补充讲解。运行前请阅读<a href="guide.html#environment">环境说明</a>。</div><article class="prose"><span class="chapter-anchor" id="refinement-types"></span>
+<p><strong>精化类型究竟是什么？</strong> 可以用一个等式概括：</p>
+<blockquote>
+<p><strong>精化类型 = 类型 + 谓词。</strong></p>
+</blockquote>
+<p>也就是说，在普通类型上加一条逻辑条件，限制这个类型允许包含哪些值。你可以先把逻辑谓词看作一个返回布尔值的表达式。这样一来，类型就不只是“整数”“列表”这样的粗分类，还能描述值必须满足的具体不变量。</p>
+<h2 id="definetype">定义精化类型<a class="heading-anchor" href="#definetype" aria-label="链接到定义精化类型">#</a></h2>
+<p>先定义两个简单的精化类型：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type Zero    = {v:Int | v == 0} @-}
+{-@ type NonZero = {v:Int | v /= 0} @-}
+</code></pre></div>
+<p><code>Zero</code> 可以读成：“一个 <code>Int</code> 值 <code>v</code>，并且 <code>v</code> 等于 <code>0</code>。”<code>NonZero</code> 则是：“一个 <code>Int</code> 值 <code>v</code>，并且 <code>v</code> 不等于 <code>0</code>。”</p>
+<p>其中的 <strong><code>v</code> 是值变量</strong>，代表正在被约束的那个值。<code>Zero</code> 描述的集合只有一个元素：<code>0</code>；<code>NonZero</code> 描述的是所有非零的 <code>Int</code>，例如 <code>1</code>、<code>-1</code>、<code>2</code>、<code>-2</code> 等。</p>
+<blockquote>
+<p><strong>原注</strong>：精化类型注解写在带有 <code>@</code> 的 Haskell 注释中。因此，它们真的是可以由机器检查的注释。</p>
+</blockquote>
+<p>要使用这些类型，可以这样写：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ zero :: Zero @-}
+zero  = 0 :: Int
+
+{-@ one, two, three :: NonZero @-}
+one   = 1 :: Int
+two   = 2 :: Int
+three = 3 :: Int
+</code></pre></div>
+<h2 id="errors">类型不匹配时会发生什么<a class="heading-anchor" href="#errors" aria-label="链接到类型不匹配时会发生什么">#</a></h2>
+<p>如果硬把一个不满足条件的值放进精化类型里，例如：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">nonsense :: Int
+nonsense = one&#39;
+  where
+  {-@ one&#39; :: Zero @-}
+  one&#39; = 1 
+</code></pre></div>
+<p>LiquidHaskell 就会报告错误：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">../liquidhaskell-tutorial/src/03-basic.lhs:72:3-6: Error: Liquid Type Mismatch
+
+72 |   one&#39; = 1 :: Int
+       ^^^^
+
+  Inferred type
+    VV : {VV : Int | VV == (1 : int)}
+
+  not a subtype of Required type
+    VV : {VV : Int | VV == 0}
+</code></pre></div>
+<p>这条消息的意思是：表达式 <code>1 :: Int</code> 被推导出的类型是：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">    {v:Int | v == 1}
+</code></pre></div>
+<p>而要求的类型是：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">    {v:Int | v == 0}
+</code></pre></div>
+<p>前者不是后者的子类型，原因很直接：<code>1</code> 不等于 <code>0</code>。</p>
+<blockquote>
+<p><strong>译者说明</strong>：这里的报错路径和格式来自原教程。阅读时主要看 “Inferred type”（推导出的类型）和 “Required type”（要求的类型）之间的差异；工具版本不同，显示形式可能不同。</p>
+</blockquote>
+<h2 id="subtyping">子类型关系：条件越强，可用的地方反而越多<a class="heading-anchor" href="#subtyping" aria-label="链接到子类型关系：条件越强，可用的地方反而越多">#</a></h2>
+<p>“子类型”是什么意思？先给 <code>Int</code> 增加几种不同的约束：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type Nat   = {v:Int | 0 &lt;= v}        @-}
+{-@ type Even  = {v:Int | v mod 2 == 0 } @-}
+{-@ type Lt100 = {v:Int | v &lt; 100}       @-}
+</code></pre></div>
+<p>这三个别名分别表示非负整数、偶数，以及小于 <code>100</code> 的整数。</p>
+<p>那么，<code>zero</code> 是什么类型？它当然是 <code>Zero</code>，但它也满足 <code>Nat</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ zero&#39; :: Nat @-}
+zero&#39;     = zero
+</code></pre></div>
+<p>它也满足 <code>Even</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ zero&#39;&#39; :: Even @-}
+zero&#39;&#39;     = zero
+</code></pre></div>
+<p>还满足其他适用的条件，比如 <code>Lt100</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ zero&#39;&#39;&#39; :: Lt100  @-}
+zero&#39;&#39;&#39;     = zero
+</code></pre></div>
+<blockquote>
+<p><strong>原注</strong>：这里分别使用 <code>zero&#39;</code>、<code>zero&#39;&#39;</code> 等名字，是因为原教程所用的 LiquidHaskell 写法中，每个顶层名字最多对应一个精化类型注解。</p>
+</blockquote>
+<p><strong>子类型关系对应逻辑蕴含。</strong> 对于 <code>0 :: Int</code>，<code>Zero</code> 比 <code>Nat</code>、<code>Even</code>、<code>Lt100</code> 都更精确：<code>Zero</code> 所描述的值集合，是后三者所描述集合的子集。对应的逻辑关系是：</p>
+<ul>
+<li><code>v = 0 ⇒ 0 ≤ v</code>；</li>
+<li><code>v = 0 ⇒ v mod 2 = 0</code>；</li>
+<li><code>v = 0 ⇒ v &lt; 100</code>。</li>
+</ul>
+<p>因此，某处只需要一个非负整数，而我们提供了一个已经证明等于零的值，当然没问题。</p>
+<p>关于精化类型，可以先记住三件事：</p>
+<ol>
+<li>精化类型就是附带逻辑谓词的类型。</li>
+<li>同一个值可以满足多种精化条件，分别体现不同性质。</li>
+<li>去掉谓词，就回到了普通 Haskell 类型。</li>
+</ol>
+<blockquote>
+<p><strong>原注</strong>：反过来说，普通 Haskell 类型可以看成附带了一个永远成立的条件。例如，<code>Int</code> 相当于 <code>{v:Int | true}</code>。</p>
+</blockquote>
+<h2 id="writing-specifications">用类型写规格<a class="heading-anchor" href="#writing-specifications" aria-label="链接到用类型写规格">#</a></h2>
+<p>接下来写一些更有意思的规格。</p>
+<p><strong>先给“不应该执行到的代码”一个类型。</strong> 把普通的 <code>error</code> 包在 <code>die</code> 中：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ die :: {v:String | false} -&gt; a  @-}
+die msg = error msg
+</code></pre></div>
+<p>关键在于参数上的 <code>false</code>：调用者必须提供一个满足 <code>false</code> 的字符串。但没有任何实际字符串能满足这个条件！</p>
+<p>因此，只有当 LiquidHaskell 能证明某个调用位置根本不可达时，这里的 <code>die</code> 调用才能通过检查。例如，它会接受：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">cannotDie = if 1 + 1 == 3
+              then die &quot;horrible death&quot;
+              else ()
+</code></pre></div>
+<p>因为条件 <code>1 + 1 == 3</code> 永远为假，<code>die</code> 所在分支不会执行。</p>
+<p>但它会拒绝：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">canDie = if 1 + 1 == 2
+           then die &quot;horrible death&quot;
+           else ()
+</code></pre></div>
+<p>因为这个分支不但可能执行，而且条件确实为真，<code>die</code> 就会被调用。</p>
+<blockquote>
+<p><strong>译者说明</strong>：<code>die</code> 不是一种新的运行时防护。如果它真的被执行，底层仍是 <code>error</code>。这个类型的作用，是要求验证器证明相关路径不可达。</p>
+</blockquote>
+<h2 id="refining-function-types-pre-conditions">精化函数类型：前置条件<a class="heading-anchor" href="#refining-function-types-pre-conditions" aria-label="链接到精化函数类型：前置条件">#</a></h2>
+<p>我们用 <code>die</code> 写一个除法函数，希望它只接受非零除数：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">divide&#39;     :: Int -&gt; Int -&gt; Int
+divide&#39; n 0 = die &quot;divide by zero&quot;
+divide&#39; n d = n `div` d
+</code></pre></div>
+<p>从实现看，<code>div</code> 本身只会在除数不为零时调用。但 LiquidHaskell 仍会在 <code>die</code> 处报错：如果调用 <code>divide&#39;</code> 时，第二个参数就是 <code>0</code>，怎么办？</p>
+<p>可以用 <strong>前置条件</strong> 明确规定：第二个参数必须非零。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ divide :: Int -&gt; NonZero -&gt; Int @-}
+divide _ 0 = die &quot;divide by zero&quot;
+divide n d = n `div` d
+</code></pre></div>
+<p><strong>它为什么能通过验证？</strong> LiquidHaskell 分析到第一条方程时，会同时知道两件互相矛盾的事：参数类型说除数非零；模式匹配又说它等于零。</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">    0 :: {v: Int | v == 0}
+</code></pre></div>
+<p>既然这些条件不可能同时成立，这个分支就是死代码。于是，在这个不可能的上下文里，<code>&quot;divide by zero&quot;</code> 可以被赋予 <code>{v:String | false}</code>；<code>die</code> 的调用也就满足了要求。</p>
+<p><strong>前置条件由调用方负责建立。</strong> 写上 <code>NonZero</code> 以后，每次使用 <code>divide</code>，都必须传入一个可以证明非零的值。下面两种用法就没有问题：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">avg2 x y   = divide (x + y) 2
+avg3 x y z = divide (x + y + z) 3
+</code></pre></div>
+<h3 id="list-average">练习：列表平均值<a class="heading-anchor" href="#list-average" aria-label="链接到练习：列表平均值">#</a></h3>
+<p>看看下面的 <code>avg</code>：</p>
+<ol>
+<li>为什么 LiquidHaskell 会在 <code>n</code> 处报错？</li>
+<li>可以怎样修改代码，让它通过检查？</li>
+</ol>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">avg       :: [Int] -&gt; Int
+avg xs    = divide total n
+  where
+    total = sum xs
+    n     = length xs
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明</strong>：本节中的“安全除法”具体指排除除数为零这一错误。它并没有顺带证明所有机器整数运算都不会溢出；算术模型的限制见<a href="Tutorial_02_Logic.html#examples-arithmetic">上一章</a>。</p>
+</blockquote>
+<h2 id="refining-function-types-post-conditions">精化函数类型：后置条件<a class="heading-anchor" href="#refining-function-types-post-conditions" aria-label="链接到精化函数类型：后置条件">#</a></h2>
+<p>精化类型也可以描述函数 <strong>返回的值</strong>。例如，下面是一个简单的绝对值函数：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">abs           :: Int -&gt; Int
+abs n
+  | 0 &lt; n     = n
+  | otherwise = 0 - n
+</code></pre></div>
+<p>为返回值加上 <code>Nat</code>，就表达了“结果非负”：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ abs :: Int -&gt; Nat @-}
+</code></pre></div>
+<p>LiquidHaskell 会根据分支来推理：如果 <code>0 &lt; n</code>，直接返回 <code>n</code>，结果显然非负；否则 <code>n ≤ 0</code>，所以 <code>0 - n</code> 非负。这样就验证了后置条件。</p>
+<blockquote>
+<p><strong>原注</strong>：这些算术推导由 SMT 求解器自动完成。求解器内置了相应算术理论的判定过程，可以直接对逻辑约束进行推理。</p>
+<p><strong>译者说明</strong>：这里仍沿用原教程的整数模型示例。机器 <code>Int</code> 的最小值取绝对值时涉及溢出边界，不能只凭这段数学推导就宣称实际实现对所有机器整数都满足该性质。</p>
+</blockquote>
+<h2 id="propositions">检查外部值：布尔值与命题<a class="heading-anchor" href="#propositions" aria-label="链接到检查外部值：布尔值与命题">#</a></h2>
+<p>上一节通过 <strong>计算</strong> 得到了一个满足 <code>Nat</code> 条件的结果。有时，我们拿到的是外部提供的值，需要先 <strong>检查</strong> 它是否满足某种条件，例如是否 <code>NonZero</code>。</p>
+<p>以一个命令行计算器为例：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">calc = do putStrLn &quot;Enter numerator&quot;
+          n &lt;- readLn
+          putStrLn &quot;Enter denominator&quot;
+          d &lt;- readLn
+          putStrLn (result n d)
+          calc
+</code></pre></div>
+<p>它读取两个数，然后相除。<code>result</code> 会先检查 <code>d</code> 是否严格大于零——大于零自然也就不等于零——满足条件才执行除法，否则提示用户：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">result n d
+  | isPositive d = &quot;Result = &quot; ++ show (n `divide` d)
+  | otherwise    = &quot;Humph, please enter positive denominator!&quot;
+</code></pre></div>
+<p><code>isPositive</code> 本身也很简单：输入大于零就返回 <code>True</code>，否则返回 <code>False</code>。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">isPositive :: Int -&gt; Bool
+isPositive x = x &gt; 0
+</code></pre></div>
+<p>为了验证 <code>result</code> 里的 <code>divide</code> 调用，需要把一个联系告诉 LiquidHaskell：<strong><code>isPositive d</code> 返回真，说明 <code>d</code> 大于零。</strong> 这个联系是 <code>isPositive</code> 的后置条件：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ isPositive :: x:Int -&gt; {v:Bool | v &lt;=&gt; x &gt; 0} @-}
+</code></pre></div>
+<p>这个类型说：<code>isPositive x</code> 返回 <code>True</code>，当且仅当 <code>x &gt; 0</code>。</p>
+<p>因此，即使只是一个普通的 <code>Bool</code> 检查函数，也可以通过精化后的返回类型，说明检查结果与输入值之间的关系。在为真的分支里，用户提供的值就获得了所需性质：这里是严格为正，从而也满足 <code>NonZero</code>，接下来的除法才能安全进行。</p>
+<blockquote>
+<p><strong>译者说明</strong>：这展示了一个非常实用的边界模式：先在运行时检查未知输入，再利用检查结果，在后续内部代码中进行静态推理。示例中的 <code>readLn</code> 仍可能因格式错误而抛异常；本节没有验证输入解析本身。</p>
+</blockquote>
+<h3 id="propositions-exercise">练习：布尔检查的规格<a class="heading-anchor" href="#propositions-exercise" aria-label="链接到练习：布尔检查的规格">#</a></h3>
+<p>如果删掉 <code>isPositive</code> 的精化类型，会怎样？能否换一种不同的类型注解，同时保留所需的安全性？</p>
+<h3 id="assertions">练习：断言<a class="heading-anchor" href="#assertions" aria-label="链接到练习：断言">#</a></h3>
+<p>下面有一个类似 <a href="https://www.haskell.org/hoogle/?hoogle=assert">assert</a> 的函数，以及两个调用位置。请为 <code>lAssert</code> 写一个合适的精化类型，让 <code>lAssert</code> 本身和 <code>yes</code> 都能通过检查，而 <code>no</code> 被拒绝。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ lAssert  :: Bool -&gt; a -&gt; a @-}
+lAssert True  x = x
+lAssert False _ = die &quot;yikes, assertion fails!&quot;
+
+yes = lAssert (1 + 1 == 2) ()
+no  = lAssert (1 + 1 == 3) ()
+</code></pre></div>
+<p><strong>提示</strong>：需要在前置条件中规定，<code>lAssert</code> 的第一个参数只能是 <code>True</code>。</p>
+<h2 id="putting-it-all-together">把这些能力组合起来<a class="heading-anchor" href="#putting-it-all-together" aria-label="链接到把这些能力组合起来">#</a></h2>
+<p>最后，用一个简单的 <code>truncate</code> 函数，把前置条件、后置条件和分支推理连起来：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">truncate :: Int -&gt; Int -&gt; Int
+truncate i max
+  | i&#39; &lt;= max&#39; = i
+  | otherwise  = max&#39; * (i `divide` i&#39;)
+    where
+      i&#39;       = abs i
+      max&#39;     = abs max
+</code></pre></div>
+<p>当 <code>i</code> 的绝对值不超过给定上限的绝对值时，函数返回 <code>i</code>；超出时，则把它的幅度截到这个上限，并保留正负方向。</p>
+<blockquote>
+<p><strong>译者说明</strong>：这里的 <code>truncate</code> 是教程自定义的整数限幅函数，不是 Prelude 中把实数截断成整数的那个同名函数。原文在说明中混用了参数名 <code>max</code>、<code>n</code>；这里按实际代码解释，比较的是 <code>abs i</code> 和 <code>abs max</code>。</p>
+</blockquote>
+<p>LiquidHaskell 为什么知道 <code>divide</code> 的除数不会为零？因为在 <code>otherwise</code> 分支里，它能得到：</p>
+<ol>
+<li>从分支条件知道 <code>max&#39; &lt; i&#39;</code>；</li>
+<li>从 <code>abs</code> 的后置条件知道 <code>0 &lt;= i&#39;</code>；</li>
+<li>从 <code>abs</code> 的后置条件知道 <code>0 &lt;= max&#39;</code>。</li>
+</ol>
+<p>这些条件合起来，推出 <code>i&#39; &gt; 0</code>，当然也就有 <code>i&#39; /= 0</code>。因此，调用位置的 <code>i&#39;</code> 满足 <code>NonZero</code>，符合 <code>divide</code> 的前置条件，除零风险就被排除了。</p>
+<h2 id="recap">本章回顾<a class="heading-anchor" href="#recap" aria-label="链接到本章回顾">#</a></h2>
+<p>到这里，我们已经见过精化类型与 LiquidHaskell 的基本用法：</p>
+<ol>
+<li>用逻辑谓词细化类型，<strong>描述</strong> 值的具体性质。</li>
+<li>用合适的函数类型，<strong>表达</strong> 断言、前置条件和后置条件。</li>
+<li>让 SMT 求解器追踪程序值之间的关系，<strong>验证</strong> 代码是否满足这些性质。</li>
+</ol>
+</article><nav class="chapter-pagination" aria-label="章节翻页"><a href="Tutorial_02_Logic.html"><small>上一章</small><strong>02 逻辑与 SMT</strong></a><a href="Tutorial_04_Polymorphism.html"><small>下一章</small><strong>04 多态</strong></a></nav><footer class="page-footer"><p>原著 Ranjit Jhala 与贡献者 · 中文翻译与讲解</p><p><a href="about.html">来源与译本说明</a><span>·</span><a href="LICENSE">MIT License</a><span>·</span><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_01_Introduction.html">英文教程</a></p></footer></main><aside class="toc" aria-label="本页目录"><p>本页内容</p><nav><a class="toc-depth-2" href="#definetype">定义精化类型</a><a class="toc-depth-2" href="#errors">类型不匹配时会发生什么</a><a class="toc-depth-2" href="#subtyping">子类型关系：条件越强，可用的地方反而越多</a><a class="toc-depth-2" href="#writing-specifications">用类型写规格</a><a class="toc-depth-2" href="#refining-function-types-pre-conditions">精化函数类型：前置条件</a><a class="toc-depth-3" href="#list-average">练习：列表平均值</a><a class="toc-depth-2" href="#refining-function-types-post-conditions">精化函数类型：后置条件</a><a class="toc-depth-2" href="#propositions">检查外部值：布尔值与命题</a><a class="toc-depth-3" href="#propositions-exercise">练习：布尔检查的规格</a><a class="toc-depth-3" href="#assertions">练习：断言</a><a class="toc-depth-2" href="#putting-it-all-together">把这些能力组合起来</a><a class="toc-depth-2" href="#recap">本章回顾</a></nav><a class="back-top" href="#main-content">回到顶部 ↑</a></aside></div>
+  <button class="nav-backdrop" id="nav-backdrop" aria-label="关闭章节导航" tabindex="-1" hidden></button>
+  <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><h2 id="search-title">搜索教程</h2><button class="dialog-close" id="search-close" aria-label="关闭搜索">Esc</button></div><label for="search-input" class="sr-only">输入中文、英文或代码名称</label><div class="search-input-wrap"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><input id="search-input" type="search" placeholder="试试「不变量」、measure、ByteString…" autocomplete="off"></div><p class="search-status" id="search-status" role="status">搜索全部章节与术语；多个关键词用空格分隔。</p><ol id="search-results" class="search-results"></ol></dialog>
+  <div class="sr-only" id="live-status" aria-live="polite"></div>
+</body>
+</html>

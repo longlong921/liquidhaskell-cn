@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="用度量函数描述列表是否为空，建立安全的部分函数接口。">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>6. 布尔度量 · LiquidHaskell 中文教程</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>try{const t=localStorage.getItem('lh-cn-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}</script>
+  <script src="search-index.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-page="Tutorial_06_Measure_Bool">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar"><div class="topbar-inner">
+    <button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开章节导航" aria-controls="chapter-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">λ</span><span>LiquidHaskell <span class="brand-language">中文教程</span></span></a>
+    <div class="top-actions"><button class="search-button" data-open-search aria-label="搜索教程"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><span>搜索教程</span><kbd>Ctrl K</kbd></button><button class="icon-button" id="theme-toggle" aria-label="切换明暗主题" title="切换明暗主题"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.1A8.7 8.7 0 0 1 10.9 3.5 8.7 8.7 0 1 0 20.5 13.1Z"/></svg></button><a class="repo-link" href="https://github.com/longlong921/liquidhaskell-cn">GitHub <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+  </div></header>
+  <div class="layout "><aside class="sidebar" id="chapter-navigation" aria-label="教程导航">
+    <a class="sidebar-home " href="index.html"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/></svg> 阅读首页</a>
+    <div class="nav-group"><p class="nav-label">I · 精化类型</p><ol start="1"><li><a href="Tutorial_01_Introduction.html" ><span class="nav-number">01</span><span>引言</span></a></li><li><a href="Tutorial_02_Logic.html" ><span class="nav-number">02</span><span>逻辑与 SMT</span></a></li><li><a href="Tutorial_03_Basic.html" ><span class="nav-number">03</span><span>精化类型</span></a></li><li><a href="Tutorial_04_Polymorphism.html" ><span class="nav-number">04</span><span>多态</span></a></li><li><a href="Tutorial_05_Datatypes.html" ><span class="nav-number">05</span><span>精化数据类型</span></a></li></ol></div><div class="nav-group"><p class="nav-label">II · 度量函数</p><ol start="6"><li><a href="Tutorial_06_Measure_Bool.html" aria-current="page" class="active"><span class="nav-number">06</span><span>布尔度量</span></a></li><li><a href="Tutorial_07_Measure_Int.html" ><span class="nav-number">07</span><span>数值度量</span></a></li><li><a href="Tutorial_08_Measure_Set.html" ><span class="nav-number">08</span><span>集合度量</span></a></li></ol></div><div class="nav-group"><p class="nav-label">III · 完整案例</p><ol start="9"><li><a href="Tutorial_09_Case_Study_Lazy_Queues.html" ><span class="nav-number">09</span><span>惰性队列</span></a></li><li><a href="Tutorial_10_Case_Study_Associative_Maps.html" ><span class="nav-number">10</span><span>键值映射</span></a></li><li><a href="Tutorial_11_Case_Study_Pointers.html" ><span class="nav-number">11</span><span>指针与字节</span></a></li><li><a href="Tutorial_12_Case_Study_AVL.html" ><span class="nav-number">12</span><span>AVL 树</span></a></li></ol></div>
+    <div class="nav-extras"><a href="guide.html" >阅读与练习指南</a><a href="glossary.html" >中英术语表</a><a href="about.html" >译本说明与来源</a></div>
+    <div class="sidebar-note"><span class="status-dot"></span>12 章完整译文<br><small>原文示例 · 练习 · 译者说明</small></div>
+  </aside><main id="main-content" tabindex="-1"><div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div><header class="chapter-header"><p class="eyebrow">第 06 章 <span>/</span> 度量函数</p><h1>布尔度量</h1><p class="chapter-subtitle">让逻辑读懂数据的形状</p><div class="chapter-links"><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_06_Measure_Bool.html">对照英文原文 ↗</a><a href="examples/Tutorial_06_Measure_Bool.lhs" download>下载原始示例 ↓</a></div></header><div class="reading-note"><strong>阅读提示</strong> 代码与练习保留原貌；标为「译者说明」的内容是补充讲解。运行前请阅读<a href="guide.html#environment">环境说明</a>。</div><article class="prose"><span class="chapter-anchor" id="boolmeasures"></span>
+<p>前两章用精化描述了基本 <code>Int</code> 值的性质，例如向量下标的范围，也描述了列表元素应满足的条件。接下来，我们要描述的是 <strong>整个数据结构</strong> 的性质，比如“这个列表是否为空”，再用这些性质改进操作列表或树的 API。</p>
+<h2 id="部分函数">部分函数<a class="heading-anchor" href="#部分函数" aria-label="链接到部分函数">#</a></h2>
+<p>先回到除法安全这个例子。此前我们写过：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ divide :: Int -&gt; NonZero -&gt; Int @-}
+divide _ 0 = die &quot;divide-by-zero&quot;
+divide x n = x `div` n
+</code></pre></div>
+<p>输入类型 <code>NonZero</code> 给出的 <strong>前置条件</strong>，让 LiquidHaskell 能证明运行时不会执行 <code>die</code>。相应地，每个调用 <code>divide</code> 的地方，都必须证明第二个参数非零。</p>
+<p>当除数是编写代码时就能确定的常量，这不难：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">avg2 x y   = divide (x + y)     2
+
+avg3 x y z = divide (x + y + z) 3
+</code></pre></div>
+<p>但如果除数是在运行时计算出来的，就需要多做一些工作。例如，先编写一个计算列表元素个数的函数：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">size        :: [a] -&gt; Int
+size []     =  0
+size (_:xs) =  1 + size xs
+</code></pre></div>
+<p>再用它计算平均值：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">avgMany xs = divide total elems
+  where
+    total  = sum  xs
+    elems  = size xs
+</code></pre></div>
+<p>这一次，LiquidHaskell 会报告错误：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">     src/04-measure.lhs:77:27-31: Error: Liquid Type Mismatch
+       Inferred type
+         VV : Int | VV == elems
+
+       not a subtype of Required type
+         VV : Int | 0 /= VV
+
+       In Context
+         VV    : Int | VV == elems
+         elems : Int
+</code></pre></div>
+<p>它 <strong>无法证明</strong> 除数属于 <code>NonZero</code>，因为列表为空时，元素个数确实可以是 <code>0</code>。因此，我们需要一种方式，说明 <code>avgMany</code> 的输入列表必须非空。</p>
+<h2 id="usingmeasures">把函数提升为度量函数<a class="heading-anchor" href="#usingmeasures" aria-label="链接到把函数提升为度量函数">#</a></h2>
+<p>怎样告诉 LiquidHaskell“这个列表非空”？回想<a href="Tutorial_04_Polymorphism.html#vectorbounds">之前描述向量长度时</a>用到的 <code>measure</code>。沿着这个思路，先写一个判断列表是否非空的普通函数：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">notEmpty       :: [a] -&gt; Bool
+notEmpty []    = False
+notEmpty (_:_) = True
+</code></pre></div>
+<p>这里的 <strong>度量函数</strong> 是一类满足以下条件的完全 Haskell 函数：</p>
+<ol>
+<li>对每个数据构造器，有且只有一个定义方程。</li>
+<li>能保证终止，通常通过对数据结构做结构递归实现。</li>
+</ol>
+<p>对于满足这些条件的函数，可以用下面的声明告诉 LiquidHaskell：把它 <strong>提升</strong> 到精化逻辑中，允许我们在类型的条件里引用它。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ measure notEmpty @-}
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明</strong>：“提升”并不是把函数搬到运行时的另一个环境里，而是让验证器知道它的逻辑含义。在本例中，<code>notEmpty []</code> 为假，<code>notEmpty (x:xs)</code> 为真。</p>
+</blockquote>
+<h3 id="描述非空列表">描述非空列表<a class="heading-anchor" href="#描述非空列表" aria-label="链接到描述非空列表">#</a></h3>
+<p>现在，非空列表就是普通 <code>[a]</code> 中满足 <code>notEmpty</code> 的那部分值：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type NEList a = {v:[a] | notEmpty v} @-}
+</code></pre></div>
+<p>接着，可以强化相关函数的签名，建立平均值计算所需的安全性。</p>
+<h3 id="列表长度的条件保证">列表长度的条件保证<a class="heading-anchor" href="#列表长度的条件保证" aria-label="链接到列表长度的条件保证">#</a></h3>
+<p><strong>如果</strong> 输入列表非空，<code>size</code> 的结果就应该严格大于零。用输出精化中的<a href="Tutorial_02_Logic.html#semantics">逻辑蕴含</a>表达这一点：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ size :: xs:[a] -&gt; {v:Nat | notEmpty xs =&gt; v &gt; 0} @-}
+</code></pre></div>
+<p>这里同时要求结果属于 <code>Nat</code>。即使输入为空，也仍然知道长度非负。</p>
+<h3 id="只接收非空列表的平均值函数">只接收非空列表的平均值函数<a class="heading-anchor" href="#只接收非空列表的平均值函数" aria-label="链接到只接收非空列表的平均值函数">#</a></h3>
+<p>平均值对非空列表才有定义，因此可以直接使用 <code>NEList</code> 表达输入要求：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ average :: NEList Int -&gt; Int @-}
+average xs = divide total elems
+  where
+    total  = sum xs
+    elems  = size xs
+</code></pre></div>
+<h3 id="Average-Maybe">练习：也可以返回 <code>Maybe</code><a class="heading-anchor" href="#Average-Maybe" aria-label="链接到练习：也可以返回 Maybe">#</a></h3>
+<p>修改下面的 <code>average&#39;</code>：输入为空时返回 <code>Nothing</code>，非空时返回计算结果。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">average&#39;      :: [Int] -&gt; Maybe Int
+average&#39; xs
+  | ok        = Just $ divide (sum xs) elems
+  | otherwise = Nothing
+  where
+    elems     = size xs
+    ok        = True   -- What expression goes here?
+</code></pre></div>
+<h3 id="Debugging-Specifications">练习：规格也需要调试<a class="heading-anchor" href="#Debugging-Specifications" aria-label="链接到练习：规格也需要调试">#</a></h3>
+<p>LiquidHaskell 这样的形式化验证器，不仅能帮助我们检查 <strong>实现</strong>，也能帮助检查我们写下的 <strong>规格</strong>。请解释：下面两个 <code>size</code> 变体为什么都无法通过验证？</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ size1    :: xs:NEList a -&gt; Pos @-}
+size1 []     =  0
+size1 (_:xs) =  1 + size1 xs
+
+{-@ size2    :: xs:[a] -&gt; {v:Int | notEmpty xs =&gt; v &gt; 0} @-}
+size2 []     =  0
+size2 (_:xs) =  1 + size2 xs
+</code></pre></div>
+<h2 id="安全的列表-api">安全的列表 API<a class="heading-anchor" href="#安全的列表-api" aria-label="链接到安全的列表 API">#</a></h2>
+<p>能够描述非空列表之后，就可以检查那些只对非空列表有定义的操作，防止它们在意外收到空列表时崩溃。</p>
+<h3 id="head-和-tail"><code>head</code> 和 <code>tail</code><a class="heading-anchor" href="#head-和-tail" aria-label="链接到head 和 tail">#</a></h3>
+<p>这两个函数是典型的例子：输入非空时有意义，输入为空时会失败。可以这样给它们规定类型：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ head    :: NEList a -&gt; a @-}
+head (x:_)  = x
+head []     = die &quot;Fear not! &#39;twill ne&#39;er come to pass&quot;
+
+{-@ tail    :: NEList a -&gt; [a] @-}
+tail (_:xs) = xs
+tail []     = die &quot;Relaxeth! this too shall ne&#39;er be&quot;
+</code></pre></div>
+<p>LiquidHaskell 根据前置条件，推导出两个定义中的第二个分支都是 <strong>不可达代码</strong>。当然，代价是每个调用者都必须证明自己传入的是非空列表。</p>
+<h3 id="Safe-Head">练习：安全地取第一个元素<a class="heading-anchor" href="#Safe-Head" aria-label="链接到练习：安全地取第一个元素">#</a></h3>
+<p>给 <code>null</code> 写一个规格，使 <code>safeHead</code> 通过验证。<strong>不要</strong> 把 <code>null</code> 的输入限制成非空列表，那样就失去了检查空列表的意义。正确的规格应该说明：它接受 <strong>任意</strong> 列表，而且返回 <code>False</code> <strong>当且仅当</strong> 输入列表非空。</p>
+<p><strong>提示：</strong> 可以回顾<a href="Tutorial_02_Logic.html#semantics">逻辑一章</a>中的蕴含 <code>==&gt;</code> 和逻辑等价 <code>&lt;=&gt;</code>。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">safeHead      :: [a] -&gt; Maybe a
+safeHead xs
+  | null xs   = Nothing
+  | otherwise = Just $ head xs
+
+{-@ null      :: [a] -&gt; Bool @-}
+null []       =  True
+null (_:_)    =  False
+</code></pre></div>
+<h3 id="把相邻的相同元素分组">把相邻的相同元素分组<a class="heading-anchor" href="#把相邻的相同元素分组" aria-label="链接到把相邻的相同元素分组">#</a></h3>
+<p>利用这些约束，编写一个函数，把连续相等的元素组成非空小组：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ groupEq    :: (Eq a) =&gt; [a] -&gt; [NEList a] @-}
+groupEq []     = []
+groupEq (x:xs) = (x:ys) : groupEq zs
+  where
+    (ys, zs)   = span (x ==) xs
+</code></pre></div>
+<p>返回结果中的 <strong>每个元素</strong> 都以 <code>x:ys</code> 的形式构造，因此必然非空。LiquidHaskell 由此能推断，整个结果的类型是 <code>[NEList a]</code>，也就是“由非空列表组成的列表”。</p>
+<h3 id="去掉连续重复的字符">去掉连续重复的字符<a class="heading-anchor" href="#去掉连续重复的字符" aria-label="链接到去掉连续重复的字符">#</a></h3>
+<p>可以先用 <code>groupEq</code> 把字符串拆成若干组连续重复的字符，再从每组取出第一个字符：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- &gt;&gt;&gt; eliminateStutter &quot;ssstringssss liiiiiike thisss&quot;
+-- &quot;strings like this&quot;
+eliminateStutter xs = map head $ groupEq xs
+</code></pre></div>
+<p>LiquidHaskell 会为这里 <code>map</code> 的类型参数自动补上 <code>notEmpty v</code> 这一精化条件，从而证明每次调用 <code>head</code> 时，接收到的列表都非空。</p>
+<h3 id="foldl1"><code>foldl1</code><a class="heading-anchor" href="#foldl1" aria-label="链接到foldl1">#</a></h3>
+<p>作者很喜欢这个折叠函数：它把序列的第一个元素当作初始累积值。当然，这也意味着它只能处理非空序列。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ foldl1         :: (a -&gt; a -&gt; a) -&gt; NEList a -&gt; a @-}
+foldl1 f (x:xs)    = foldl f x xs
+foldl1 _ []        = die &quot;foldl1&quot;
+
+foldl              :: (a -&gt; b -&gt; a) -&gt; a -&gt; [b] -&gt; a
+foldl _ acc []     = acc
+foldl f acc (x:xs) = foldl f (f acc x) xs
+</code></pre></div>
+<h3 id="对非空列表求和">对非空列表求和<a class="heading-anchor" href="#对非空列表求和" aria-label="链接到对非空列表求和">#</a></h3>
+<p>对非空数字列表求和，只需要把 <code>foldl1</code> 与 <code>(+)</code> 组合起来。前置条件让 LiquidHaskell 能证明 <code>die</code> 所在分支不可达：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ sum :: (Num a) =&gt; NEList a -&gt; a  @-}
+sum []  = die &quot;cannot add up empty list&quot;
+sum xs  = foldl1 (+) xs
+</code></pre></div>
+<p>因此，这里定义的 <code>sum</code> 只能用于非空列表：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">sumOk  = sum [1,2,3,4,5]    -- is accepted by LH, but
+
+sumBad = sum []             -- is rejected by LH
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明</strong>：这是本章为了演示前置条件而定义的 <code>sum</code>，不是 Prelude 中“空列表求和返回零”的那个 <code>sum</code>。不要把本例的限制套用到所有同名函数上。</p>
+</blockquote>
+<h3 id="Weighted-Average">练习：加权平均值<a class="heading-anchor" href="#Weighted-Average" aria-label="链接到练习：加权平均值">#</a></h3>
+<p>下面的函数计算加权平均值，但 LiquidHaskell 不接受它。请找出原因，适当地修改代码或规格。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ wtAverage :: NEList (Pos, Pos) -&gt; Int @-}
+wtAverage wxs = divide totElems totWeight
+  where
+    elems     = map (\(w, x) -&gt; w * x) wxs
+    weights   = map (\(w, _) -&gt; w    ) wxs
+    totElems  = sum elems
+    totWeight = sum weights
+    sum       = foldl1 (+)
+
+map           :: (a -&gt; b) -&gt; [a] -&gt; [b]
+map _ []      =  []
+map f (x:xs)  =  f x : map f xs
+</code></pre></div>
+<p><strong>提示：</strong> 报错指出了哪些变量？这些变量的值由什么函数计算得到？能否给这些函数写出更准确的规格？</p>
+<h3 id="Mitchells-Risers">练习：Mitchell 的 <code>risers</code><a class="heading-anchor" href="#Mitchells-Risers" aria-label="链接到练习：Mitchell 的 risers">#</a></h3>
+<p>非空列表会在很多地方出现。如果类型系统能跟踪非空性，而我们又不必专门创建一种新数据类型，代码会方便很多。</p>
+<p>看一下 <a href="http://neilmitchell.blogspot.com/2008/03/sorting-at-speed.html">Neil Mitchell 推广的 <code>risers</code> 函数</a>。<code>safeSplit</code> 要求输入非空，但是 LiquidHaskell 认为 <code>risers</code> 内部的调用还没有满足这个要求。请修改 <code>risers</code> 的规格，使它通过验证。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ risers       :: (Ord a) =&gt; [a] -&gt; [[a]] @-}
+risers           :: (Ord a) =&gt; [a] -&gt; [[a]]
+risers []        = []
+risers [x]       = [[x]]
+risers (x:y:etc)
+  | x &lt;= y       = (x:s) : ss
+  | otherwise    = [x] : (s : ss)
+    where
+      (s, ss)    = safeSplit $ risers (y:etc)
+
+{-@ safeSplit    :: NEList a -&gt; (a, [a]) @-}
+safeSplit (x:xs) = (x, xs)
+safeSplit _      = die &quot;don&#39;t worry, be happy&quot;
+</code></pre></div>
+<h2 id="回顾">回顾<a class="heading-anchor" href="#回顾" aria-label="链接到回顾">#</a></h2>
+<p>这一章介绍了如何：</p>
+<ol>
+<li>用度量函数 <strong>定义数据结构的性质</strong>。</li>
+<li>在这些性质上添加精化，表达关键不变量，并在编译时检查操作是否可能遇到未预期的输入。</li>
+<li>继续使用 <strong>普通 Haskell 类型</strong>，例如列表，而不必<a href="http://blog.jbapple.com/2008/01/extra-type-safety-using-polymorphic.html">另造数据类型</a>。后者往往会带来大量新构造器和转换操作，让实现和规格变得杂乱。</li>
+</ol>
+<p>度量函数能表达的东西远不止“是否为空”。下一章继续用它描述长度、大小和维度。</p>
+</article><nav class="chapter-pagination" aria-label="章节翻页"><a href="Tutorial_05_Datatypes.html"><small>上一章</small><strong>05 精化数据类型</strong></a><a href="Tutorial_07_Measure_Int.html"><small>下一章</small><strong>07 数值度量</strong></a></nav><footer class="page-footer"><p>原著 Ranjit Jhala 与贡献者 · 中文翻译与讲解</p><p><a href="about.html">来源与译本说明</a><span>·</span><a href="LICENSE">MIT License</a><span>·</span><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_01_Introduction.html">英文教程</a></p></footer></main><aside class="toc" aria-label="本页目录"><p>本页内容</p><nav><a class="toc-depth-2" href="#部分函数">部分函数</a><a class="toc-depth-2" href="#usingmeasures">把函数提升为度量函数</a><a class="toc-depth-3" href="#描述非空列表">描述非空列表</a><a class="toc-depth-3" href="#列表长度的条件保证">列表长度的条件保证</a><a class="toc-depth-3" href="#只接收非空列表的平均值函数">只接收非空列表的平均值函数</a><a class="toc-depth-3" href="#Average-Maybe">练习：也可以返回 Maybe</a><a class="toc-depth-3" href="#Debugging-Specifications">练习：规格也需要调试</a><a class="toc-depth-2" href="#安全的列表-api">安全的列表 API</a><a class="toc-depth-3" href="#head-和-tail">head 和 tail</a><a class="toc-depth-3" href="#Safe-Head">练习：安全地取第一个元素</a><a class="toc-depth-3" href="#把相邻的相同元素分组">把相邻的相同元素分组</a><a class="toc-depth-3" href="#去掉连续重复的字符">去掉连续重复的字符</a><a class="toc-depth-3" href="#foldl1">foldl1</a><a class="toc-depth-3" href="#对非空列表求和">对非空列表求和</a><a class="toc-depth-3" href="#Weighted-Average">练习：加权平均值</a><a class="toc-depth-3" href="#Mitchells-Risers">练习：Mitchell 的 risers</a><a class="toc-depth-2" href="#回顾">回顾</a></nav><a class="back-top" href="#main-content">回到顶部 ↑</a></aside></div>
+  <button class="nav-backdrop" id="nav-backdrop" aria-label="关闭章节导航" tabindex="-1" hidden></button>
+  <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><h2 id="search-title">搜索教程</h2><button class="dialog-close" id="search-close" aria-label="关闭搜索">Esc</button></div><label for="search-input" class="sr-only">输入中文、英文或代码名称</label><div class="search-input-wrap"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><input id="search-input" type="search" placeholder="试试「不变量」、measure、ByteString…" autocomplete="off"></div><p class="search-status" id="search-status" role="status">搜索全部章节与术语；多个关键词用空格分隔。</p><ol id="search-results" class="search-results"></ol></dialog>
+  <div class="sr-only" id="live-status" aria-live="polite"></div>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="通过向量索引、递归和高阶循环，理解精化与多态如何配合。">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>4. 多态 · LiquidHaskell 中文教程</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>try{const t=localStorage.getItem('lh-cn-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}</script>
+  <script src="search-index.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-page="Tutorial_04_Polymorphism">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar"><div class="topbar-inner">
+    <button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开章节导航" aria-controls="chapter-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">λ</span><span>LiquidHaskell <span class="brand-language">中文教程</span></span></a>
+    <div class="top-actions"><button class="search-button" data-open-search aria-label="搜索教程"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><span>搜索教程</span><kbd>Ctrl K</kbd></button><button class="icon-button" id="theme-toggle" aria-label="切换明暗主题" title="切换明暗主题"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.1A8.7 8.7 0 0 1 10.9 3.5 8.7 8.7 0 1 0 20.5 13.1Z"/></svg></button><a class="repo-link" href="https://github.com/longlong921/liquidhaskell-cn">GitHub <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+  </div></header>
+  <div class="layout "><aside class="sidebar" id="chapter-navigation" aria-label="教程导航">
+    <a class="sidebar-home " href="index.html"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/></svg> 阅读首页</a>
+    <div class="nav-group"><p class="nav-label">I · 精化类型</p><ol start="1"><li><a href="Tutorial_01_Introduction.html" ><span class="nav-number">01</span><span>引言</span></a></li><li><a href="Tutorial_02_Logic.html" ><span class="nav-number">02</span><span>逻辑与 SMT</span></a></li><li><a href="Tutorial_03_Basic.html" ><span class="nav-number">03</span><span>精化类型</span></a></li><li><a href="Tutorial_04_Polymorphism.html" aria-current="page" class="active"><span class="nav-number">04</span><span>多态</span></a></li><li><a href="Tutorial_05_Datatypes.html" ><span class="nav-number">05</span><span>精化数据类型</span></a></li></ol></div><div class="nav-group"><p class="nav-label">II · 度量函数</p><ol start="6"><li><a href="Tutorial_06_Measure_Bool.html" ><span class="nav-number">06</span><span>布尔度量</span></a></li><li><a href="Tutorial_07_Measure_Int.html" ><span class="nav-number">07</span><span>数值度量</span></a></li><li><a href="Tutorial_08_Measure_Set.html" ><span class="nav-number">08</span><span>集合度量</span></a></li></ol></div><div class="nav-group"><p class="nav-label">III · 完整案例</p><ol start="9"><li><a href="Tutorial_09_Case_Study_Lazy_Queues.html" ><span class="nav-number">09</span><span>惰性队列</span></a></li><li><a href="Tutorial_10_Case_Study_Associative_Maps.html" ><span class="nav-number">10</span><span>键值映射</span></a></li><li><a href="Tutorial_11_Case_Study_Pointers.html" ><span class="nav-number">11</span><span>指针与字节</span></a></li><li><a href="Tutorial_12_Case_Study_AVL.html" ><span class="nav-number">12</span><span>AVL 树</span></a></li></ol></div>
+    <div class="nav-extras"><a href="guide.html" >阅读与练习指南</a><a href="glossary.html" >中英术语表</a><a href="about.html" >译本说明与来源</a></div>
+    <div class="sidebar-note"><span class="status-dot"></span>12 章完整译文<br><small>原文示例 · 练习 · 译者说明</small></div>
+  </aside><main id="main-content" tabindex="-1"><div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div><header class="chapter-header"><p class="eyebrow">第 04 章 <span>/</span> 精化类型</p><h1>多态</h1><p class="chapter-subtitle">通用代码也能保留精确信息</p><div class="chapter-links"><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_04_Polymorphism.html">对照英文原文 ↗</a><a href="examples/Tutorial_04_Polymorphism.lhs" download>下载原始示例 ↓</a></div></header><div class="reading-note"><strong>阅读提示</strong> 代码与练习保留原貌；标为「译者说明」的内容是补充讲解。运行前请阅读<a href="guide.html#environment">环境说明</a>。</div><article class="prose"><span class="chapter-anchor" id="polymorphism"></span>
+<p>精化类型尤其擅长描述 <strong>多态数据类型</strong> 和 <strong>高阶函数</strong> 的性质。我们从一个<a href="https://www.cs.cmu.edu/~fp/papers/pldi98dml.pdf">经典例子</a>入手：数组访问是否越界。</p>
+<p><strong>数组边界验证</strong> 要保证：每次取元素时，索引都处在数组的合法范围中，也就是从 <code>0</code> 开始，严格小于数组长度。例如，有一个包含两个元素的数组：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">twoLangs  = fromList [&quot;haskell&quot;, &quot;javascript&quot;]
+</code></pre></div>
+<p>尝试用几个不同的索引访问它：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">eeks      = [ok, yup, nono]
+  where
+    ok    = twoLangs ! 0
+    yup   = twoLangs ! 1
+    nono  = twoLangs ! 3
+</code></pre></div>
+<p>如果实际运行，最后一次访问会抛异常：数组长度只有 <code>2</code>，却尝试读取索引 <code>3</code>。</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">Prelude&gt; :l 03-poly.lhs
+[1 of 1] Compiling VectorBounds     ( 03-poly.lhs, interpreted )
+Ok, modules loaded: VectorBounds.
+*VectorBounds&gt; eeks
+Loading package ... done.
+&quot;*** Exception: ./Data/Vector/Generic.hs:249 ((!)): index out of bounds (3,2)
+</code></pre></div>
+<p>在配置合适的编辑器中，例如原文提到的 Vim、Emacs，或者在原教程的在线演示里，LiquidHaskell 可以在运行之前就指出这个问题。接下来看看它为什么接受 <code>ok</code>、<code>yup</code>，却拒绝 <code>nono</code>。过程中，我们也会认识它如何处理递归、高阶函数、数据类型和多态。</p>
+<blockquote>
+<p><strong>译者说明</strong>：本章保留原文的演示和工具调用方式。本中文站提供静态阅读，不提供原站的在线执行按钮； <code>.spec</code> 文件、命令行参数和依赖包的使用方式，请结合所安装版本的官方文档确认。</p>
+</blockquote>
+<h2 id="vectorbounds">写规格：向量边界<a class="heading-anchor" href="#vectorbounds" aria-label="链接到写规格：向量边界">#</a></h2>
+<p>首先，为 <code>Data.Vector</code> 的<a href="https://github.com/ucsd-progsys/liquidhaskell/blob/91e1074575ca102df810ea399c5a13063e8c8011/include/Data/Vector.spec">关键接口</a>细化类型，说明三件事：</p>
+<ol>
+<li>如何定义一个 <code>Vector</code> 的长度；</li>
+<li>如何计算这个长度；</li>
+<li>如何把索引限制在指定向量的合法范围内。</li>
+</ol>
+<h3 id="imported-specifications">为外部模块提供规格<a class="heading-anchor" href="#imported-specifications" aria-label="链接到为外部模块提供规格">#</a></h3>
+<p>即使手里没有某个导入模块的实现，也可以为它写规格。原教程提供两种组织方式：直接写在使用方的源码里；或者更适合复用地写进 <code>.spec</code> 文件，供多个模块使用。</p>
+<p>检查文件时，可以指定额外的规格目录。假设 <code>target.hs</code> 导入了外部依赖 <code>Data.Vector</code>，可以在 <code>include/Data/Vector.spec</code> 中写：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">-- | Define the size
+measure vlen :: Vector a -&gt; Int
+
+-- | Compute the size
+assume length :: x:Vector a -&gt; {v:Int | v = vlen x}
+
+-- | Lookup at an index
+assume (!) :: x:Vector a -&gt; {v:Nat | v &lt; vlen x} -&gt; a
+</code></pre></div>
+<p>然后告诉 LiquidHaskell 去这个目录寻找规格：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">$ liquid -i include/ target.hs
+</code></pre></div>
+<p>原教程说明，当时的 LiquidHaskell 已随附 <code>Prelude</code>、<code>Data.List</code>、<code>Data.Vector</code> 的规格，并会默认加载。</p>
+<p><strong>度量函数（measure）</strong> 用来描述 Haskell 数据值的某个性质，供规格和验证使用。这里可以把 <code>vlen</code> 理解为向量的实际长度，不管程序通过什么方式计算这个长度。</p>
+<p><strong><code>assume</code> 表示可信假设。</strong> 当我们无法验证一个函数的实现，例如没有它的代码时，可以用 <code>assume</code> 声明它的语义。这里假设 <code>Data.Vector.length</code> 确实返回向量的长度，同时规定 <code>(!)</code> 的索引必须满足 <code>0 ≤ 索引 &lt; 向量长度</code>。</p>
+<blockquote>
+<p><strong>译者说明</strong>：写下 <code>assume</code> 不是完成了对应实现的证明，而是把这条规格作为信任边界。调用方的证明依赖它真实且完整；如果底层库不遵守这个约定，上层验证就不能提供原先预期的保证。</p>
+</blockquote>
+<p><strong>依赖式精化条件</strong> 可以连接规格中不同位置的值。<code>length</code> 的类型把输入命名为 <code>x</code>，随后在返回类型中使用 <code>vlen x</code>；<code>(!)</code> 也先给向量命名为 <code>x</code>，再用它约束第二个参数。这样，类型表达的就不只是单个值的性质，还包括多个值之间的关系。</p>
+<p><strong>类型别名</strong> 可以给常用规格取一个简短的名字。写程序时需要抽象，写规格时也一样。例如，长度为 <code>N</code> 的向量可以定义为：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type VectorN a N = {v:Vector a | vlen v == N} @-}
+</code></pre></div>
+<p>接着就能为前面的 <code>twoLangs</code> 标出长度为 <code>2</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ twoLangs :: VectorN String 2 @-}
+twoLangs     = fromList [&quot;haskell&quot;, &quot;javascript&quot;]
+</code></pre></div>
+<p>同样，可以给位于区间 <code>Lo</code> 到 <code>Hi</code> 之间的整数起一个别名：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type Btwn Lo Hi = {v:Int | Lo &lt;= v &amp;&amp; v &lt; Hi} @-}
+</code></pre></div>
+<p>注意，这是一个 <strong>左闭右开区间</strong>：包括 <code>Lo</code>，不包括 <code>Hi</code>。有了它，<code>(!)</code> 可以写成：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">(!) :: x:Vector a -&gt; Btwn 0 (vlen x) -&gt; a
+</code></pre></div>
+<h2 id="verification-vector-lookup">做验证：访问向量<a class="heading-anchor" href="#verification-vector-lookup" aria-label="链接到做验证：访问向量">#</a></h2>
+<p>写几个函数，看看这些规格是否发挥作用。先取向量的第一个元素，也就是 <code>head</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">head     :: Vector a -&gt; a
+head vec = vec ! 0
+</code></pre></div>
+<p>检查后会得到错误：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">     src/03-poly.lhs:127:23: Error: Liquid Type Mismatch
+       Inferred type
+         VV : Int | VV == ?a &amp;&amp; VV == 0
+
+       not a subtype of Required type
+         VV : Int | VV &gt;= 0 &amp;&amp; VV &lt; vlen vec
+
+       In Context
+         VV  : Int | VV == ?a &amp;&amp; VV == 0
+         vec : Vector a | 0 &lt;= vlen vec
+         ?a  : Int | ?a == (0  :  int)
+</code></pre></div>
+<p>LiquidHaskell 的意思是：目前无法证明 <code>0</code> 是合法索引，因为无法证明 <code>0 &lt; vlen vec</code>。为什么？如果 <code>vec</code> 是空向量，就确实不能访问第 <code>0</code> 个元素。</p>
+<p>要解决这个问题，可以选择两种接口设计：</p>
+<ol>
+<li><strong>要求输入非空</strong>；</li>
+<li><strong>允许输入为空，但只有非空时才返回元素</strong>。</li>
+</ol>
+<p>第一种做法可以给非空向量定义别名 <code>NEVector</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type NEVector a = {v:Vector a | 0 &lt; vlen v} @-}
+
+{-@ head&#39; :: NEVector a -&gt; a @-}
+head&#39; vec = vec ! 0
+</code></pre></div>
+<h3 id="vector-head">练习：向量的第一个元素<a class="heading-anchor" href="#vector-head" aria-label="链接到练习：向量的第一个元素">#</a></h3>
+<p>把下面的 <code>undefined</code> 换成实现：<code>head&#39;&#39;</code> 接受任意向量，但只有输入非空时才返回一个元素。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">head&#39;&#39;     :: Vector a -&gt; Maybe a
+head&#39;&#39; vec = undefined
+</code></pre></div>
+<h3 id="unsafe-lookup">练习：带前提的索引访问<a class="heading-anchor" href="#unsafe-lookup" aria-label="链接到练习：带前提的索引访问">#</a></h3>
+<p><code>unsafeLookup</code> 只是把 <code>(!)</code> 的两个参数交换了位置。修改它的规格，让现有实现可以通过 LiquidHaskell 检查。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ unsafeLookup :: Int -&gt; Vector a -&gt; a @-}
+unsafeLookup index vec = vec ! index
+</code></pre></div>
+<h3 id="safe-lookup">练习：先检查边界再访问<a class="heading-anchor" href="#safe-lookup" aria-label="链接到练习：先检查边界再访问">#</a></h3>
+<p>补全 <code>safeLookup</code> 中的 <code>ok</code>，让它在访问之前完成边界检查。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ safeLookup :: Vector a -&gt; Int -&gt; Maybe a @-}
+safeLookup x i
+  | ok        = Just (x ! i)
+  | otherwise = Nothing
+  where
+    ok        = undefined
+</code></pre></div>
+<h2 id="inference-our-first-recursive-function">类型推导：第一个递归函数<a class="heading-anchor" href="#inference-our-first-recursive-function" aria-label="链接到类型推导：第一个递归函数">#</a></h2>
+<p>接下来写一个递归函数，把 <code>Int</code> 向量里的所有元素加起来：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- &gt;&gt;&gt; vectorSum (fromList [1, -2, 3])
+-- 2
+vectorSum         :: Vector Int -&gt; Int
+vectorSum vec     = go 0 0
+  where
+    go acc i
+      | i &lt; sz    = go (acc + (vec ! i)) (i + 1)
+      | otherwise = acc
+    sz            = length vec
+</code></pre></div>
+<h3 id="guards">练习：循环条件<a class="heading-anchor" href="#guards" aria-label="链接到练习：循环条件">#</a></h3>
+<p>如果把条件改成 <code>i &lt;= sz</code>，会发生什么？</p>
+<h3 id="absolute-sum">练习：绝对值之和<a class="heading-anchor" href="#absolute-sum" aria-label="链接到练习：绝对值之和">#</a></h3>
+<p>仿照上面的写法，实现 <code>absoluteSum</code>：把向量中每个元素的绝对值相加。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- &gt;&gt;&gt; absoluteSum (fromList [1, -2, 3])
+-- 6
+{-@ absoluteSum :: Vector Int -&gt; Nat @-}
+absoluteSum     = undefined
+</code></pre></div>
+<h3 id="inference">验证器推导出了什么<a class="heading-anchor" href="#inference" aria-label="链接到验证器推导出了什么">#</a></h3>
+<p>LiquidHaskell 可以验证 <code>vectorSum</code>；更准确地说，此处验证的是每次 <code>vec ! i</code> 访问的边界安全性。关键在于，它能自动推导出这样的 <code>go</code> 类型：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">go :: Int -&gt; {v:Int | 0 &lt;= v &amp;&amp; v &lt;= sz} -&gt; Int
+</code></pre></div>
+<blockquote>
+<p><strong>原注</strong>：在原教程对应的编辑器支持中，可以点击 <code>go</code> 查看推导结果。</p>
+</blockquote>
+<p>这个类型表示，第二个参数 <code>i</code> 在 <code>0</code> 与 <code>sz</code> 之间，两个端点都可以取到。进入循环体时，分支条件又补充了 <code>i &lt; sz</code>，于是得到 <code>0 ≤ i &lt; vlen vec</code>，访问就安全了。</p>
+<p><strong>原文提示</strong>：检查这段示例时，需要给 <code>liquid</code> 加 <code>--no-termination</code>，或者在源码中加入 <code>{-@ LIQUID &quot;--no-termination&quot; @-}</code>。否则，原教程所用写法中的 <code>go</code> 无法直接通过默认终止性检查。原文说明会在后续讨论如何用递减度量验证终止性。</p>
+<blockquote>
+<p><strong>译者说明</strong>：关闭终止性检查之后，这里得到的是上述访问性质的验证，并没有同时证明循环终止。对于这个循环，可以直观地观察剩余距离 <code>sz - i</code>，但实际采用何种终止性注解，要按所用版本完成检查。</p>
+</blockquote>
+<h3 id="off-by-one">练习：为什么允许等于上界？<a class="heading-anchor" href="#off-by-one" aria-label="链接到练习：为什么允许等于上界？">#</a></h3>
+<p><code>go</code> 的类型为什么是 <code>v &lt;= sz</code>，而不是 <code>v &lt; sz</code>？想一想循环退出时还会不会调用一次 <code>go</code>。</p>
+<h2 id="higher-order-functions">高阶函数：把递归封装成 <code>loop</code><a class="heading-anchor" href="#higher-order-functions" aria-label="链接到高阶函数：把递归封装成 loop">#</a></h2>
+<p>把刚才的底层递归模式抽出来，写成一个通用的高阶函数 <code>loop</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">loop :: Int -&gt; Int -&gt; a -&gt; (Int -&gt; a -&gt; a) -&gt; a
+loop lo hi base f =  go base lo
+  where
+    go acc i
+      | i &lt; hi    = go (f i acc) (i + 1)
+      | otherwise = acc
+</code></pre></div>
+<p>现在可以用 <code>loop</code> 实现求和：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">vectorSum&#39;      :: Vector Int -&gt; Int
+vectorSum&#39; vec  = loop 0 n 0 body
+  where
+    body i acc  = acc + (vec ! i)
+    n           = length vec
+</code></pre></div>
+<p>类型推导在这里很有用。LiquidHaskell 能得到：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">loop :: lo:Nat -&gt; hi:{Nat|lo &lt;= hi} -&gt; a -&gt; (Btwn lo hi -&gt; a -&gt; a) -&gt; a
+</code></pre></div>
+<p>把它读成中文，就是：</p>
+<ul>
+<li>下界 <code>lo</code> 是非负整数；</li>
+<li>上界 <code>hi</code> 也是非负整数，并且不小于 <code>lo</code>；</li>
+<li>循环体 <code>f</code> 只会收到满足 <code>lo ≤ i &lt; hi</code> 的索引。</li>
+</ul>
+<p>每次手写这么长的类型当然很繁琐。如果以后希望把 <code>loop</code> 作为公开接口，可以以推导出的类型为基础，写出明确的类型签名。</p>
+<p>在调用 <code>loop 0 n 0 body</code> 时，<code>lo</code>、<code>hi</code> 分别取 <code>0</code>、<code>n</code>。这里的调用上下文，也帮助推导器获得了非负性信息。于是，它知道 <code>body</code> 收到的索引都满足 <code>0 ≤ i &lt; vlen vec</code>，其中的 <code>vec ! i</code> 也就安全。</p>
+<h3 id="using-higher-order-loops">练习：使用高阶循环<a class="heading-anchor" href="#using-higher-order-loops" aria-label="链接到练习：使用高阶循环">#</a></h3>
+<p>补全下面的 <code>absoluteSum&#39;</code>。完成以后，看看工具为 <code>body</code> 推导出了什么类型。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- &gt;&gt;&gt; absoluteSum&#39; (fromList [1, -2, 3])
+-- 6
+{-@ absoluteSum&#39; :: Vector Int -&gt; Nat @-}
+absoluteSum&#39; vec = loop 0 n 0 body
+  where
+    body i acc   = undefined
+    n            = length vec
+</code></pre></div>
+<h3 id="dot-product">练习：点积<a class="heading-anchor" href="#dot-product" aria-label="链接到练习：点积">#</a></h3>
+<p>下面用 <code>loop</code> 计算两个向量的点积。为什么 LiquidHaskell 会报错？修改代码或者规格，让它通过检查。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- &gt;&gt;&gt; dotProduct (fromList [1,2,3]) (fromList [4,5,6])
+-- 32
+{-@ dotProduct :: x:Vector Int -&gt; y:Vector Int -&gt; Int @-}
+dotProduct x y = loop 0 sz 0 body
+  where
+    body i acc = acc + (x ! i)  *  (y ! i)
+    sz         = length x
+</code></pre></div>
+<h2 id="sparsetype">精化与多态：稀疏向量<a class="heading-anchor" href="#sparsetype" aria-label="链接到精化与多态：稀疏向量">#</a></h2>
+<p>普通 <code>Vector</code> 很适合表示稠密数组。但有时绝大多数元素都是零，使用 <strong>稀疏向量</strong> 会更自然：只保存非默认位置的“索引—值”对。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type SparseN a N = [(Btwn 0 N, a)] @-}
+</code></pre></div>
+<p>列表里没有出现的索引，隐含的值就是 <code>0</code>，或者元素类型 <code>a</code> 中与之对应的默认值。</p>
+<p><code>SparseN</code> 只是右侧类型的 <strong>别名</strong>，并没有创建新的 Haskell 数据类型。如果你熟悉 <a href="https://en.wikipedia.org/wiki/Dependent_ML">DML</a> 或 <a href="http://code.haskell.org/Agda/examples/Vec.agda">Agda</a> 用类型索引编码长度的方式，需要注意：虽然这里也出现了参数 <code>N</code>，但这段定义并不是在 Haskell 类型层面定义一个索引化数据类型。</p>
+<h3 id="sparse-products">计算稀疏向量的乘积<a class="heading-anchor" href="#sparse-products" aria-label="链接到计算稀疏向量的乘积">#</a></h3>
+<p>下面计算普通向量与稀疏表示之间的点积：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ sparseProduct  :: x:Vector _ -&gt; SparseN _ (vlen x) -&gt; _ @-}
+sparseProduct x y   = go 0 y
+  where
+    go n []         = n
+    go n ((i,v):y&#39;) = go (n + (x!i) * v) y&#39;
+</code></pre></div>
+<p>规格保证了列表 <code>y</code> 中每个 <code>(i, v)</code> 的 <code>i</code> 都在向量 <code>x</code> 的合法范围内。因此，LiquidHaskell 能验证每一次 <code>x ! i</code> 都安全。</p>
+<h3 id="folds">复用已有的 <code>fold</code><a class="heading-anchor" href="#folds" aria-label="链接到复用已有的 fold">#</a></h3>
+<p>你可能已经发现，这段递归可以更直接地写成 <a href="https://hackage.haskell.org/package/base-4.18.0.0/docs/Data-List.html#v:foldl">fold</a>。<code>foldl&#39;</code> 的普通类型是：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">foldl&#39; :: (a -&gt; b -&gt; a) -&gt; a -&gt; [b] -&gt; a
+</code></pre></div>
+<p>我们只需遍历稀疏向量，不断累加：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ sparseProduct&#39;  :: x:Vector _ -&gt; SparseN _ (vlen x) -&gt; _ @-}
+sparseProduct&#39; x y  = foldl&#39; body 0 y
+  where
+    body sum (i, v) = sum + (x ! i) * v
+</code></pre></div>
+<p>LiquidHaskell 仍然可以验证它。关键是多态类型在这次调用中如何实例化：</p>
+<ol>
+<li>GHC 推导出，<code>foldl&#39;</code> 类型中的 <code>b</code> 在此处实例化为普通 Haskell 类型 <code>(Int, a)</code>。</li>
+<li>LiquidHaskell 进一步推导出，<code>b</code> 可以实例化为精化后的 <code>(Btwn 0 (vlen x), a)</code>。</li>
+</ol>
+<p>这样，每个传入 <code>body</code> 的元素仍携带索引范围约束。既省去了许多重复注解，也可以自然地复用现有的多态容器函数。</p>
+<h2 id="recap">本章回顾<a class="heading-anchor" href="#recap" aria-label="链接到本章回顾">#</a></h2>
+<p>本章展示了如何用精化类型验证长度、索引等性质，以及如何在递归函数、高阶函数和多态代码之间传递这些约束。</p>
+<p>接下来，我们会把约束进一步写进数据类型的定义，从源头限制非法值的构造。</p>
+</article><nav class="chapter-pagination" aria-label="章节翻页"><a href="Tutorial_03_Basic.html"><small>上一章</small><strong>03 精化类型</strong></a><a href="Tutorial_05_Datatypes.html"><small>下一章</small><strong>05 精化数据类型</strong></a></nav><footer class="page-footer"><p>原著 Ranjit Jhala 与贡献者 · 中文翻译与讲解</p><p><a href="about.html">来源与译本说明</a><span>·</span><a href="LICENSE">MIT License</a><span>·</span><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_01_Introduction.html">英文教程</a></p></footer></main><aside class="toc" aria-label="本页目录"><p>本页内容</p><nav><a class="toc-depth-2" href="#vectorbounds">写规格：向量边界</a><a class="toc-depth-3" href="#imported-specifications">为外部模块提供规格</a><a class="toc-depth-2" href="#verification-vector-lookup">做验证：访问向量</a><a class="toc-depth-3" href="#vector-head">练习：向量的第一个元素</a><a class="toc-depth-3" href="#unsafe-lookup">练习：带前提的索引访问</a><a class="toc-depth-3" href="#safe-lookup">练习：先检查边界再访问</a><a class="toc-depth-2" href="#inference-our-first-recursive-function">类型推导：第一个递归函数</a><a class="toc-depth-3" href="#guards">练习：循环条件</a><a class="toc-depth-3" href="#absolute-sum">练习：绝对值之和</a><a class="toc-depth-3" href="#inference">验证器推导出了什么</a><a class="toc-depth-3" href="#off-by-one">练习：为什么允许等于上界？</a><a class="toc-depth-2" href="#higher-order-functions">高阶函数：把递归封装成 loop</a><a class="toc-depth-3" href="#using-higher-order-loops">练习：使用高阶循环</a><a class="toc-depth-3" href="#dot-product">练习：点积</a><a class="toc-depth-2" href="#sparsetype">精化与多态：稀疏向量</a><a class="toc-depth-3" href="#sparse-products">计算稀疏向量的乘积</a><a class="toc-depth-3" href="#folds">复用已有的 fold</a><a class="toc-depth-2" href="#recap">本章回顾</a></nav><a class="back-top" href="#main-content">回到顶部 ↑</a></aside></div>
+  <button class="nav-backdrop" id="nav-backdrop" aria-label="关闭章节导航" tabindex="-1" hidden></button>
+  <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><h2 id="search-title">搜索教程</h2><button class="dialog-close" id="search-close" aria-label="关闭搜索">Esc</button></div><label for="search-input" class="sr-only">输入中文、英文或代码名称</label><div class="search-input-wrap"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><input id="search-input" type="search" placeholder="试试「不变量」、measure、ByteString…" autocomplete="off"></div><p class="search-status" id="search-status" role="status">搜索全部章节与术语；多个关键词用空格分隔。</p><ol id="search-results" class="search-results"></ol></dialog>
+  <div class="sr-only" id="live-status" aria-live="polite"></div>
+</body>
+</html>

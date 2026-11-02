@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="把键是否存在写入接口，用引理连接树结构与映射语义。">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>10. 键值映射 · LiquidHaskell 中文教程</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>try{const t=localStorage.getItem('lh-cn-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}</script>
+  <script src="search-index.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-page="Tutorial_10_Case_Study_Associative_Maps">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar"><div class="topbar-inner">
+    <button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开章节导航" aria-controls="chapter-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">λ</span><span>LiquidHaskell <span class="brand-language">中文教程</span></span></a>
+    <div class="top-actions"><button class="search-button" data-open-search aria-label="搜索教程"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><span>搜索教程</span><kbd>Ctrl K</kbd></button><button class="icon-button" id="theme-toggle" aria-label="切换明暗主题" title="切换明暗主题"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.1A8.7 8.7 0 0 1 10.9 3.5 8.7 8.7 0 1 0 20.5 13.1Z"/></svg></button><a class="repo-link" href="https://github.com/longlong921/liquidhaskell-cn">GitHub <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+  </div></header>
+  <div class="layout "><aside class="sidebar" id="chapter-navigation" aria-label="教程导航">
+    <a class="sidebar-home " href="index.html"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/></svg> 阅读首页</a>
+    <div class="nav-group"><p class="nav-label">I · 精化类型</p><ol start="1"><li><a href="Tutorial_01_Introduction.html" ><span class="nav-number">01</span><span>引言</span></a></li><li><a href="Tutorial_02_Logic.html" ><span class="nav-number">02</span><span>逻辑与 SMT</span></a></li><li><a href="Tutorial_03_Basic.html" ><span class="nav-number">03</span><span>精化类型</span></a></li><li><a href="Tutorial_04_Polymorphism.html" ><span class="nav-number">04</span><span>多态</span></a></li><li><a href="Tutorial_05_Datatypes.html" ><span class="nav-number">05</span><span>精化数据类型</span></a></li></ol></div><div class="nav-group"><p class="nav-label">II · 度量函数</p><ol start="6"><li><a href="Tutorial_06_Measure_Bool.html" ><span class="nav-number">06</span><span>布尔度量</span></a></li><li><a href="Tutorial_07_Measure_Int.html" ><span class="nav-number">07</span><span>数值度量</span></a></li><li><a href="Tutorial_08_Measure_Set.html" ><span class="nav-number">08</span><span>集合度量</span></a></li></ol></div><div class="nav-group"><p class="nav-label">III · 完整案例</p><ol start="9"><li><a href="Tutorial_09_Case_Study_Lazy_Queues.html" ><span class="nav-number">09</span><span>惰性队列</span></a></li><li><a href="Tutorial_10_Case_Study_Associative_Maps.html" aria-current="page" class="active"><span class="nav-number">10</span><span>键值映射</span></a></li><li><a href="Tutorial_11_Case_Study_Pointers.html" ><span class="nav-number">11</span><span>指针与字节</span></a></li><li><a href="Tutorial_12_Case_Study_AVL.html" ><span class="nav-number">12</span><span>AVL 树</span></a></li></ol></div>
+    <div class="nav-extras"><a href="guide.html" >阅读与练习指南</a><a href="glossary.html" >中英术语表</a><a href="about.html" >译本说明与来源</a></div>
+    <div class="sidebar-note"><span class="status-dot"></span>12 章完整译文<br><small>原文示例 · 练习 · 译者说明</small></div>
+  </aside><main id="main-content" tabindex="-1"><div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div><header class="chapter-header"><p class="eyebrow">第 10 章 <span>/</span> 完整案例</p><h1>键值映射</h1><p class="chapter-subtitle">案例：作用域与搜索树</p><div class="chapter-links"><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_10_Case_Study_Associative_Maps.html">对照英文原文 ↗</a><a href="examples/Tutorial_10_Case_Study_Associative_Maps.lhs" download>下载原始示例 ↓</a></div></header><div class="reading-note"><strong>阅读提示</strong> 代码与练习保留原貌；标为「译者说明」的内容是补充讲解。运行前请阅读<a href="guide.html#environment">环境说明</a>。</div><article class="prose"><span class="chapter-anchor" id="案例-键值映射"></span>
+<p>还记得<a href="Tutorial_01_Introduction.html#intro">引言</a>中的例子吗？</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">ghci&gt; :m +Data.Map
+ghci&gt; let m = fromList [ (&quot;haskell&quot;   , &quot;lazy&quot;)
+                       , (&quot;javascript&quot;, &quot;eager&quot;)]
+
+ghci&gt; m ! &quot;haskell&quot;
+&quot;lazy&quot;
+
+ghci&gt; m ! &quot;python&quot;
+&quot;*** Exception: key is not in the map
+</code></pre></div>
+<p>这种问题很常见，因为键值映射几乎无处不在。在 Haskell 这样的语言里，查询不存在的键导致的异常，可以类比其他语言里的 <code>NullPointerDereference</code>。只靠普通 Haskell 类型系统，很难精确描述映射 API 的全部行为，因为这最终要求我们跟踪映射中 <strong>运行时不断变化的键集合</strong>。</p>
+<p>本章把<a href="Tutorial_08_Measure_Set.html#setmeasure">度量函数</a>和<a href="Tutorial_05_Datatypes.html#refineddatatypes">精化数据类型</a>结合起来，分析如何安全地 <strong>使用</strong> 和 <strong>实现</strong> 键值映射，例如 <code>Data.Map</code>、<code>Data.HashMap</code>。</p>
+<blockquote>
+<p><strong>译者说明：</strong> “查不到键”既可以通过本章的前置条件排除，也可以由 <code>Maybe</code>、<code>Either</code> 显式返回。选哪一种取决于 API 的职责。本章要展示的是：当调用方已经能够提供“键存在”的证据时，如何让这个证据贯穿实现，而不必重复检查。</p>
+</blockquote>
+<h2 id="mapapi">为映射写规格<a class="heading-anchor" href="#mapapi" aria-label="链接到为映射写规格">#</a></h2>
+<p>先定义一个精化 API，跟踪映射里保存的键集合，从而在静态检查阶段保证查询安全。</p>
+<p><strong>类型。</strong> 和往常一样，用 <code>k</code> 表示键的类型，用 <code>v</code> 表示值的类型：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">data Map k v    -- Currently left abstract
+</code></pre></div>
+<p><strong>键集合。</strong> 要在类型里讨论映射的键，先引入一个度量函数：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">measure keys :: Map k v -&gt; Set k
+</code></pre></div>
+<p>它把每个 <code>Map</code> 对应到其已定义键的集合 <code>Set</code>。接下来，用这个度量函数和集合运算，精化创建映射、增加绑定、查询绑定等操作的类型。这样，虽然实际的键集合是运行时建立的，我们仍能在类型系统里精确跟踪它。</p>
+<blockquote>
+<p>原注：<code>Empty</code>、<code>Union</code>、<code>In</code> 等集合操作已在<a href="Tutorial_08_Measure_Set.html#listelems">集合度量一章</a>介绍。</p>
+</blockquote>
+<p><strong>空映射。</strong> 空 <code>Map</code> 不含任何键，因此类型可以写成：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">emp :: {m:Map k v | Empty (keys m)}
+</code></pre></div>
+<p><strong>增加绑定。</strong> <code>set</code> 接收键 <code>k</code>、值 <code>v</code> 和映射 <code>m</code>，返回加入绑定 <code>k ↦ v</code> 后的新映射。因此输出键集合就是原键集合与单元素集合 <code>{k}</code> 的并集：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">set :: k:k -&gt; v -&gt; m:Map k v -&gt; {n: Map k v| AddKey k m n}
+
+predicate AddKey K M N = keys N = Set_cup (Set_sng K) (keys M)
+</code></pre></div>
+<p><strong>查询。</strong> 查询只有在键确实存在时才能成功。先定义一个谓词别名：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">predicate HasKey K M = In K (keys M)
+</code></pre></div>
+<p>然后用它给两个操作写类型：<code>mem</code> 检查键是否存在，<code>get</code> 则取出该键对应的值。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- | Check if key is defined
+mem :: k:k -&gt; m:Map k v -&gt; {v:Bool | v &lt;=&gt; HasKey k m}
+
+-- | Lookup key&#39;s value
+get :: k:k -&gt; {m:Map k v | HasKey k m} -&gt; v
+</code></pre></div>
+<h2 id="使用映射-保证表达式的变量都有定义">使用映射：保证表达式的变量都有定义<a class="heading-anchor" href="#使用映射-保证表达式的变量都有定义" aria-label="链接到使用映射：保证表达式的变量都有定义">#</a></h2>
+<p>先不急着实现 <code>Map</code>，而是写一个使用它的程序：一门小语言的解释器。这里把映射作为 <strong>环境</strong>，保存已绑定变量的值。借助精化 API，我们希望证明变量查询不会失败，作用域正确的表达式能够求值为一个结果。</p>
+<p><strong>表达式。</strong> 这门小语言有整数常量、变量、加法和 <code>let</code> 绑定：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">type Var  = String
+
+data Expr = Const Int
+          | Var   Var
+          | Plus  Expr Expr
+          | Let   Var  Expr Expr
+</code></pre></div>
+<blockquote>
+<p>原注：你也可以继续增加函数、元组等语言特性。</p>
+</blockquote>
+<p><strong>值。</strong> 我们可以把已经求值的结果描述成 <code>Expr</code> 的一个子集，从而复用表达式类型。先用一个度量函数，判断某个表达式是不是值：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ measure val @-}
+val              :: Expr -&gt; Bool
+val (Const _)    = True
+val (Var _)      = False
+val (Plus _ _)   = False
+val (Let _ _ _ ) = False
+</code></pre></div>
+<p>将这个函数提升到精化逻辑后，就可以定义表示值的别名 <code>Val</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type Val = {v:Expr | val v} @-}
+</code></pre></div>
+<p>随后定义只接受值的简单运算，例如加法：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ plus                 :: Val -&gt; Val -&gt; Val @-}
+plus (Const i) (Const j) = Const (i+j)
+plus _         _         = die &quot;Bad call to plus&quot;
+</code></pre></div>
+<p><strong>环境。</strong> 环境保存局部变量，也就是由 <code>let</code> 绑定的变量及其值。求值到 <code>Var x</code> 时，只需在环境里查询 <code>x</code>。因此，可以把环境定义为从 <code>Var</code> 到 <code>Val</code> 的映射：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type Env = Map Var Val @-}
+</code></pre></div>
+<p>这个定义把解释器希望采用的“先求得值，再存进环境”的策略写进了类型：LiquidHaskell 不允许把任意尚未求值的 <code>Expr</code> 当作 <code>Val</code> 放进去。</p>
+<blockquote>
+<p><strong>译者说明：</strong> 这里约束的是解释器的数据表示与语义，不能据此推断宿主语言 Haskell 会立即把所有字段强制求值。<code>Val</code> 说明结果必须具有值的形状，并没有给 Haskell 增加深度严格求值。</p>
+</blockquote>
+<p><strong>求值。</strong> 对表达式结构进行递归即可：遇到 <code>Var</code>，查询环境；遇到 <code>Let</code>，先求绑定表达式的值，把绑定加入环境，再求内部表达式。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">eval _ i@(Const _)   = i
+eval g (Var x)       = get x g
+eval g (Plus e1 e2)  = plus  (eval g e1) (eval g e2)
+eval g (Let x e1 e2) = eval g&#39; e2
+  where
+    g&#39;               = set x v1 g
+    v1               = eval g e1
+</code></pre></div>
+<p>这段 <code>eval</code> 看起来还不够安全：凭什么断定 <code>get x g</code> 一定成功？例如下面的调用显然会出问题：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">ghci&gt; eval emp (Var &quot;x&quot;)
+</code></pre></div>
+<p>我们是不是应该先检查变量是否存在，不存在就返回 <code>Variable Not Bound</code> 一类错误？当然可以。不过，本章尝试在编译时证明：对于满足输入条件的调用，这种错误不会发生。</p>
+<p><strong>自由变量。</strong> 自由变量指表达式中出现了、却没有被覆盖它的 <code>Let</code> 绑定的变量。把这个概念写成函数，并提升为度量函数：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ measure free @-}
+free               :: Expr -&gt; (Set Var)
+free (Const _)     = empty
+free (Var x)       = singleton x
+free (Plus e1 e2)  = xs1 `union`  xs2
+  where
+    xs1            = free e1
+    xs2            = free e2
+free (Let x e1 e2) = xs1 `union` (xs2 `difference` xs)
+  where
+    xs1            = free e1
+    xs2            = free e2
+    xs             = singleton x
+</code></pre></div>
+<p><strong>相对于环境闭合。</strong> 如果表达式的所有自由变量都已出现在环境 <code>G</code> 中，就称它相对于 <code>G</code> 是闭合的。换句话说，表达式内部没有绑定的变量，都由外部环境提供。</p>
+<p>这一段文字可以压缩成很精确的类型定义：表达式的 <code>free</code> 集合必须是环境 <code>keys</code> 集合的子集。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type ClosedExpr G = {v:Expr | Subset (free v) (keys G)} @-}
+</code></pre></div>
+<p><strong>对闭合表达式求值。</strong> 只要调用时提供合适的环境，<code>eval</code> 就不会因未绑定变量而失败：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ eval :: g:Env -&gt; ClosedExpr g -&gt; Val @-}
+</code></pre></div>
+<p>如果表达式没有任何自由变量，就可以在空环境中求值。由此得到顶层求值器：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ topEval :: {v:Expr | Empty (free v)} -&gt; Val @-}
+topEval     = eval emp
+</code></pre></div>
+<h3 id="练习-检查表达式是否合法">练习：检查表达式是否合法<a class="heading-anchor" href="#练习-检查表达式是否合法" aria-label="链接到练习：检查表达式是否合法">#</a></h3>
+<p>补全下面的函数，让它先检查 <code>Expr</code> 是否适合当前环境，再决定是否调用 <code>eval</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ evalAny   :: Env -&gt; Expr -&gt; Maybe Val @-}
+evalAny g e
+  | ok        = Just $ eval g e
+  | otherwise = Nothing
+  where
+    ok        = undefined
+</code></pre></div>
+<p>有了证明，仍可以写几个简单例子检查自己的理解：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">tests   = [v1, v2]
+  where
+    v1  = topEval e1          -- Rejected by LH
+    v2  = topEval e2          -- Accepted by LH
+    e1  = (Var x) `Plus` c1
+    e2  = Let x c10 e1
+    x   = &quot;x&quot;
+    c1  = Const 1
+    c10 = Const 10
+</code></pre></div>
+<h3 id="练习-闭包">练习：闭包（★★）<a class="heading-anchor" href="#练习-闭包" aria-label="链接到练习：闭包（★★）">#</a></h3>
+<p>给这门语言增加函数。按照下面的形式扩展 <code>Expr</code>，并相应修改 <code>eval</code> 和 <code>free</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">data Expr = ... | Fun Var Expr | App Expr Expr
+</code></pre></div>
+<p>这里只要求保证变量查询安全。完整的类型安全，例如保证每次应用的对象确实是一个函数，会更复杂，超出了目前的讨论范围。</p>
+<h2 id="lemmas">实现映射：二叉搜索树<a class="heading-anchor" href="#lemmas" aria-label="链接到实现映射：二叉搜索树">#</a></h2>
+<p>刚才我们看到，即使 <code>Map</code> 的键集合是动态形成的，也能借助<a href="#mapapi">精化 API</a>保证查询安全。下面用<a href="Tutorial_05_Datatypes.html#binarysearchtree">二叉搜索树</a>实现满足这个 API 的映射库。</p>
+<p><strong>数据类型。</strong> 之前 <code>Map</code> 是抽象的，现在给它一个具体表示：对每个 <code>Node</code>，左子树的所有键都小于当前 <code>key</code>，右子树的所有键都大于它。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ data Map k v = Node { key   :: k
+                        , value :: v
+                        , left  :: Map {v:k | v &lt; key} v
+                        , right :: Map {v:k | key &lt; v} v }
+                 | Tip
+  @-}
+</code></pre></div>
+<p>回忆前面的讨论，这种精化数据定义会增强构造函数的类型，从而在静态检查时确保程序只能构造满足二叉搜索顺序的树。</p>
+<p><strong>已定义的键。</strong> 然后实现 <code>keys</code> 度量函数，描述某个映射中到底有哪些键：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ measure keys @-}
+keys                :: (Ord k) =&gt; Map k v -&gt; Set k
+keys Tip            = empty
+keys (Node k _ l r) = ks `union` kl `union` kr
+  where
+    kl              = keys l
+    kr              = keys r
+    ks              = singleton k
+
+</code></pre></div>
+<p>有了数据类型和度量函数，就可以逐一实现映射操作。</p>
+<h3 id="练习-空映射">练习：空映射<a class="heading-anchor" href="#练习-空映射" aria-label="链接到练习：空映射">#</a></h3>
+<p>补全空映射 <code>emp</code> 的定义，检查自己是否理解了类型要求：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ emp :: {m:Map k v | Empty (keys m)} @-}
+emp     = undefined
+</code></pre></div>
+<h3 id="练习-插入">练习：插入<a class="heading-anchor" href="#练习-插入" aria-label="链接到练习：插入">#</a></h3>
+<p>向映射加入键 <code>k&#39;</code> 时，我们递归遍历树，根据与当前键的比较结果，向左或向右继续查找。下面的版本含有一个很常见的错误，因此 LiquidHaskell 会拒绝它。找到并修复错误，让函数通过验证。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ set :: (Ord k) =&gt; k:k -&gt; v -&gt; m:Map k v
+                   -&gt; {n: Map k v | AddKey k m n} @-}
+set k&#39; v&#39; (Node k v l r)
+  | k&#39; == k   = Node k v&#39; l r
+  | k&#39; &lt;  k   = set k&#39; v l
+  | otherwise = set k&#39; v r
+set k&#39; v&#39; Tip = Node k&#39; v&#39; Tip Tip
+</code></pre></div>
+<p><strong>查询。</strong> 接下来查询键 <code>k&#39;</code> 对应的值：如果它等于根键，返回当前绑定；如果更小或更大，就分别去左子树或右子树查找。我们希望证明查询绝不会失败，所以在空树 <code>Tip</code> 分支调用 <code>die</code>，要求 LiquidHaskell 证明该分支不可达。</p>
+<blockquote>
+<p><strong>译者说明：</strong> 原文这一段称该函数为 <code>mem</code>，但后面的实际定义是 <code>get&#39;</code>；这里按代码说明它的用途。<code>mem</code> 返回布尔值，<code>get&#39;</code> 返回键对应的值，两者不要混淆。</p>
+</blockquote>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ get&#39; :: (Ord k) =&gt;  k:k -&gt; m:{Map k v| HasKey k m} -&gt; v @-}
+get&#39; k&#39; m@(Node k v l r)
+  | k&#39; == k   = v
+  | k&#39; &lt;  k   = get&#39; k&#39; l
+  | otherwise = get&#39; k&#39; r
+get&#39;  _ Tip   = die  &quot;Lookup Never Fails&quot;
+</code></pre></div>
+<p>遗憾的是，LiquidHaskell 会拒绝上面的实现。可是算法本身明明正确，问题出在哪里？看看递归调用 <code>get&#39; k&#39; l</code> 对应的错误：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text"> src/07-case-study-associative-maps.lhs:411:25: Error: Liquid Type Mismatch
+   Inferred type
+     VV : Map a b | VV == l
+   not a subtype of Required type
+     VV : Map a b | Set_mem k&#39; (keys VV)
+   In Context
+     VV : Map a b | VV == l
+     k  : a
+     l  : Map a b
+     k&#39; : a
+</code></pre></div>
+<p>LiquidHaskell 无法推出键 <code>k&#39;</code> 一定在左子树 <code>l</code> 里。我们自己是怎么判断的？输入前提 <code>HasKey k&#39; m</code> 告诉我们：<code>k&#39;</code> 一定在整棵树的某处。于是以下情况至少有一个成立：</p>
+<ol>
+<li><code>k&#39; == k</code>。</li>
+<li><code>HasKey k&#39; l</code>。</li>
+<li><code>HasKey k&#39; r</code>。</li>
+</ol>
+<p>前一个守卫 <code>k&#39; == k</code> 已经失败，因此第一种情况被排除。现在凭什么排除第三种情况，确定第二种成立？靠的是二叉搜索树不变量：<code>r</code> 的所有键都大于 <code>k</code>，而 <code>k</code> 又大于 <code>k&#39;</code>。所以 <code>r</code> 中每个键都不等于 <code>k&#39;</code>，<code>k&#39;</code> 不可能出现在 <code>r</code> 中。</p>
+<p>我们缺少的事实可以写成：</p>
+<p><strong>对任意 <code>key</code> 和 <code>t</code>，如果 <code>t</code> 的键类型是 <code>{k | k /= key}</code>，那么 <code>not (HasKey key t)</code>。</strong></p>
+<p><strong>转换引理。</strong> LiquidHaskell 不能自动推出这类事实，因为它连接了两种不同层次的信息：一边是容器 <strong>类型参数</strong> 上的精化条件，这里是“每个键都不等于 <code>key</code>”；另一边是 <strong>整个容器</strong> 的性质，这里是“<code>keys</code> 集合不含 <code>key</code>”。好消息是，我们可以把这个事实写成引理，再用普通函数表达、证明和使用它。</p>
+<blockquote>
+<p>原注：为什么不能自动推导？直观地说，检查器不会自动把 <code>keys</code> 对整棵树的遍历，与键类型参数里的约束连接起来。原作者也指出，这个细节较难用一句话完整解释。</p>
+</blockquote>
+<p><strong>定义引理。</strong> 把全称量词看作函数参数，把逻辑蕴含看作函数类型，就能将命题转换成类型。这也是 Curry–Howard 对应的思路。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ lemma_notMem :: key:k
+                 -&gt; m:Map {k:k | k /= key} v
+                 -&gt; {v:Bool | not (HasKey key m)}
+  @-}
+lemma_notMem _   Tip            = True
+lemma_notMem key (Node _ _ l r) = lemma_notMem key l &amp;&amp;
+                                  lemma_notMem key r
+</code></pre></div>
+<p><strong>证明引理。</strong> <code>lemma_notMem</code> 的签名恰好表达前面缺少的事实。返回值的基础类型是 <code>Bool</code>，附带的精化条件则是我们希望成立的命题。证明方法就是递归遍历树：对子树的证明组合起来，形成对当前树的证明。</p>
+<p><strong>使用引理。</strong> 要使用这个事实，需要把它实例化到当前关心的键和树，也就是调用引理函数，并让结果携带的精化条件进入目标表达式的类型检查环境。下面展示如何用它验证 <code>get</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ get :: (Ord k) =&gt; k:k -&gt; m:{Map k v | HasKey k m} -&gt; v @-}
+get k&#39; (Node k v l r)
+  | k&#39; == k   = v
+  | k&#39; &lt;  k   = assert (lemma_notMem k&#39; r) $
+                  get k&#39; l
+  | otherwise = assert (lemma_notMem k&#39; l) $
+                  get k&#39; r
+get _ Tip     = die &quot;Lookup failed? Impossible.&quot;
+</code></pre></div>
+<p>调用 <code>lemma_notMem</code> 后，我们得到一个用于证明的 <code>Bool</code>，其类型携带 <code>not (HasKey k&#39; r)</code> 或 <code>not (HasKey k&#39; l)</code>。再用 <code>assert</code> 包住递归调用，使 <code>get k&#39; l</code> 或 <code>get k&#39; r</code> 的类型检查可以使用这一事实：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">assert _ x = x
+</code></pre></div>
+<p><strong>幽灵值。</strong> 这种通过辅助值把证明事实带进程序的方法，通常叫作使用 <em>ghost values</em>，这里译为“幽灵值”。它们服务于验证，不参与业务结果。一般需要小心，避免辅助证明计算影响实际计算。</p>
+<p>如果真的执行 <code>lemma_notMem</code>，就要遍历整棵子树，这会破坏高效查询的目标。即使树保持<a href="Tutorial_12_Case_Study_AVL.html#case-study-avltree">平衡</a>，原本只需沿一条短路径查询，现在也可能变成整树遍历。</p>
+<blockquote>
+<p>原注：这也是对这类不变量进行动态契约检查可能很昂贵的原因。</p>
+</blockquote>
+<p><strong>惰性求值</strong> 在这里发挥作用：<code>assert _ x = x</code> 根本不需要第一个参数的值，因此证明遍历不会在运行时执行；编译器还可以把这个未使用的调用消除。这样就能在类型检查时使用引理，而不付出实际遍历的成本。严格求值语言通常需要额外机制，把这种计算标为幽灵计算或证明无关内容；在这里，惰性已经提供了所需行为。</p>
+<blockquote>
+<p><strong>译者说明：</strong> 此处的 <code>assert</code> 是上面自行定义的惰性函数，不是会在运行时检查布尔条件的 <code>Control.Exception.assert</code>。也不能把这段文字理解成“所有证明函数在任何上下文里都自动免费”：一旦结果被严格求值，仍可能产生计算成本。上游本章关闭了终止性检查，使用证明函数时也必须注意这一验证边界。</p>
+</blockquote>
+<h3 id="练习-成员测试">练习：成员测试<a class="heading-anchor" href="#练习-成员测试" aria-label="链接到练习：成员测试">#</a></h3>
+<p>修改 <code>mem</code> 的实现，使其能够被验证为满足给定签名：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ mem :: (Ord k) =&gt; k:k -&gt; m:Map k v
+                   -&gt; {v:_ | v &lt;=&gt; HasKey k m} @-}
+mem k&#39; (Node k _ l r)
+  | k&#39; == k   = True
+  | k&#39; &lt;  k   = mem k&#39; l
+  | otherwise = mem k&#39; r
+mem _ Tip     = False
+</code></pre></div>
+<h3 id="练习-找一个没出现过的整数">练习：找一个没出现过的整数（★★）<a class="heading-anchor" href="#练习-找一个没出现过的整数" aria-label="链接到练习：找一个没出现过的整数（★★）">#</a></h3>
+<p>补全下面的函数，让它返回一个与输入列表中所有整数都不同的 <code>fresh</code> 值，用这个练习巩固对幽灵值和证明的理解。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ fresh :: xs:[Int] -&gt; {v:Int | not (Elem v xs)} @-}
+fresh = undefined
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明：</strong> 这个练习采用教程中的数学整数推理方式。实际 Haskell <code>Int</code> 有界，简单地“取最大值再加一”可能溢出；若列表覆盖所有可表示值，所要求的结果甚至不存在。生产实现应使用合适的数值类型、输入前提或显式失败结果，不能把精化推导直接当作机器算术边界的保证。</p>
+</blockquote>
+<p>下面是前面<a href="Tutorial_08_Measure_Set.html#listelems">介绍过的</a> <code>Elem</code> 定义，供你回顾：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ predicate Elem X Ys  = In X (elems Ys) @-}
+{-@ measure elems @-}
+elems []     = empty
+elems (x:xs) = (singleton x) `union` (elems xs)
+</code></pre></div>
+<h2 id="回顾">回顾<a class="heading-anchor" href="#回顾" aria-label="链接到回顾">#</a></h2>
+<p>本章把前面几章的技术组合到同一个案例里：</p>
+<ol>
+<li><strong>定义 API：</strong> 用精化条件跟踪映射的键集合，排除调用部分查询函数时的键缺失错误。</li>
+<li><strong>使用 API：</strong> 实现一个小解释器，只要输入表达式相对环境闭合，就不会发生未绑定变量错误。</li>
+<li><strong>实现 API：</strong> 用二叉搜索树表示映射，并用幽灵引理补充检查器无法自动推导的事实。</li>
+</ol>
+</article><nav class="chapter-pagination" aria-label="章节翻页"><a href="Tutorial_09_Case_Study_Lazy_Queues.html"><small>上一章</small><strong>09 惰性队列</strong></a><a href="Tutorial_11_Case_Study_Pointers.html"><small>下一章</small><strong>11 指针与字节</strong></a></nav><footer class="page-footer"><p>原著 Ranjit Jhala 与贡献者 · 中文翻译与讲解</p><p><a href="about.html">来源与译本说明</a><span>·</span><a href="LICENSE">MIT License</a><span>·</span><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_01_Introduction.html">英文教程</a></p></footer></main><aside class="toc" aria-label="本页目录"><p>本页内容</p><nav><a class="toc-depth-2" href="#mapapi">为映射写规格</a><a class="toc-depth-2" href="#使用映射-保证表达式的变量都有定义">使用映射：保证表达式的变量都有定义</a><a class="toc-depth-3" href="#练习-检查表达式是否合法">练习：检查表达式是否合法</a><a class="toc-depth-3" href="#练习-闭包">练习：闭包（★★）</a><a class="toc-depth-2" href="#lemmas">实现映射：二叉搜索树</a><a class="toc-depth-3" href="#练习-空映射">练习：空映射</a><a class="toc-depth-3" href="#练习-插入">练习：插入</a><a class="toc-depth-3" href="#练习-成员测试">练习：成员测试</a><a class="toc-depth-3" href="#练习-找一个没出现过的整数">练习：找一个没出现过的整数（★★）</a><a class="toc-depth-2" href="#回顾">回顾</a></nav><a class="back-top" href="#main-content">回到顶部 ↑</a></aside></div>
+  <button class="nav-backdrop" id="nav-backdrop" aria-label="关闭章节导航" tabindex="-1" hidden></button>
+  <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><h2 id="search-title">搜索教程</h2><button class="dialog-close" id="search-close" aria-label="关闭搜索">Esc</button></div><label for="search-input" class="sr-only">输入中文、英文或代码名称</label><div class="search-input-wrap"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><input id="search-input" type="search" placeholder="试试「不变量」、measure、ByteString…" autocomplete="off"></div><p class="search-status" id="search-status" role="status">搜索全部章节与术语；多个关键词用空格分隔。</p><ol id="search-results" class="search-results"></ol></dialog>
+  <div class="sr-only" id="live-status" aria-live="polite"></div>
+</body>
+</html>

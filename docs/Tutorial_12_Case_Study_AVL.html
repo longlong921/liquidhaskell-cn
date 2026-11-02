@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="验证树高、有序性、旋转、插入和删除，组合复杂不变量。">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>12. AVL 树 · LiquidHaskell 中文教程</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>try{const t=localStorage.getItem('lh-cn-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}</script>
+  <script src="search-index.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-page="Tutorial_12_Case_Study_AVL">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar"><div class="topbar-inner">
+    <button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开章节导航" aria-controls="chapter-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">λ</span><span>LiquidHaskell <span class="brand-language">中文教程</span></span></a>
+    <div class="top-actions"><button class="search-button" data-open-search aria-label="搜索教程"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><span>搜索教程</span><kbd>Ctrl K</kbd></button><button class="icon-button" id="theme-toggle" aria-label="切换明暗主题" title="切换明暗主题"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.1A8.7 8.7 0 0 1 10.9 3.5 8.7 8.7 0 1 0 20.5 13.1Z"/></svg></button><a class="repo-link" href="https://github.com/longlong921/liquidhaskell-cn">GitHub <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+  </div></header>
+  <div class="layout "><aside class="sidebar" id="chapter-navigation" aria-label="教程导航">
+    <a class="sidebar-home " href="index.html"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/></svg> 阅读首页</a>
+    <div class="nav-group"><p class="nav-label">I · 精化类型</p><ol start="1"><li><a href="Tutorial_01_Introduction.html" ><span class="nav-number">01</span><span>引言</span></a></li><li><a href="Tutorial_02_Logic.html" ><span class="nav-number">02</span><span>逻辑与 SMT</span></a></li><li><a href="Tutorial_03_Basic.html" ><span class="nav-number">03</span><span>精化类型</span></a></li><li><a href="Tutorial_04_Polymorphism.html" ><span class="nav-number">04</span><span>多态</span></a></li><li><a href="Tutorial_05_Datatypes.html" ><span class="nav-number">05</span><span>精化数据类型</span></a></li></ol></div><div class="nav-group"><p class="nav-label">II · 度量函数</p><ol start="6"><li><a href="Tutorial_06_Measure_Bool.html" ><span class="nav-number">06</span><span>布尔度量</span></a></li><li><a href="Tutorial_07_Measure_Int.html" ><span class="nav-number">07</span><span>数值度量</span></a></li><li><a href="Tutorial_08_Measure_Set.html" ><span class="nav-number">08</span><span>集合度量</span></a></li></ol></div><div class="nav-group"><p class="nav-label">III · 完整案例</p><ol start="9"><li><a href="Tutorial_09_Case_Study_Lazy_Queues.html" ><span class="nav-number">09</span><span>惰性队列</span></a></li><li><a href="Tutorial_10_Case_Study_Associative_Maps.html" ><span class="nav-number">10</span><span>键值映射</span></a></li><li><a href="Tutorial_11_Case_Study_Pointers.html" ><span class="nav-number">11</span><span>指针与字节</span></a></li><li><a href="Tutorial_12_Case_Study_AVL.html" aria-current="page" class="active"><span class="nav-number">12</span><span>AVL 树</span></a></li></ol></div>
+    <div class="nav-extras"><a href="guide.html" >阅读与练习指南</a><a href="glossary.html" >中英术语表</a><a href="about.html" >译本说明与来源</a></div>
+    <div class="sidebar-note"><span class="status-dot"></span>12 章完整译文<br><small>原文示例 · 练习 · 译者说明</small></div>
+  </aside><main id="main-content" tabindex="-1"><div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div><header class="chapter-header"><p class="eyebrow">第 12 章 <span>/</span> 完整案例</p><h1>AVL 树</h1><p class="chapter-subtitle">案例：平衡与功能正确性</p><div class="chapter-links"><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_12_Case_Study_AVL.html">对照英文原文 ↗</a><a href="examples/Tutorial_12_Case_Study_AVL.lhs" download>下载原始示例 ↓</a></div></header><div class="reading-note"><strong>阅读提示</strong> 代码与练习保留原貌；标为「译者说明」的内容是补充讲解。运行前请阅读<a href="guide.html#environment">环境说明</a>。</div><article class="prose"><span class="chapter-anchor" id="case-study-avltree"></span>
+<p>计算机程序中最基本的抽象之一，就是保存一组值的 <strong>集合</strong>：这些值可以是名字、数字或记录，我们希望能快速插入 <code>insert</code>、删除 <code>delete</code>，以及判断某个值是否属于集合 <code>member</code>。</p>
+<p>在不可变数据结构中，树是实现集合的一种好选择。通过维持元素的 <strong>顺序</strong>，我们可以让每次操作只沿着从根到目标位置的一条路径进行；如果再让树保持 <strong>平衡</strong>，这条路径相对于整个集合就不会太长，于是操作也就高效了。</p>
+<p>不过，像现实生活一样，维持秩序和平衡常常说起来容易、做起来难。为了让每个元素处在正确的位置，可能需要一系列精巧的调整。LiquidHaskell 可以帮我们检查这些调整。下面看一个数据结构课程里的熟悉例子：由 Adelson-Velsky 和 Landis 提出的 <a href="http://en.wikipedia.org/wiki/AVL_tree">AVL 树</a>。</p>
+<blockquote>
+<p><strong>译者说明：</strong> 本章前半部分重点证明二叉搜索顺序、平衡条件和缓存高度的一致性；最后才讨论集合语义。练习中的 <code>undefined</code>、<code>FIXME</code> 和恒为 <code>True</code> 的谓词是上游保留的待完成内容，并非已经完成的证明。上游完整源码关闭了终止性检查，验证范围也需据此理解。</p>
+</blockquote>
+<h2 id="什么是-avl-树">什么是 AVL 树<a class="heading-anchor" href="#什么是-avl-树" aria-label="链接到什么是 AVL 树">#</a></h2>
+<p>先给出 Haskell 数据类型：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">data AVL a =
+    Leaf
+  | Node { key :: a      -- value
+         , l   :: AVL a  -- left subtree
+         , r   :: AVL a  -- right subtree
+         , ah  :: Int    -- height
+         }
+    deriving (Show)
+</code></pre></div>
+<blockquote>
+<p>原注：本章基于 Michael Beaumont 编写的代码。</p>
+</blockquote>
+<p>普通 Haskell 类型描述的只是一般二叉树。但真正的 AVL 树，例如<a href="#fig:avl">下面这棵树</a>，还满足两个关键不变量：<strong>二叉搜索顺序</strong> 和 <strong>高度平衡</strong>。</p>
+<p><a id="fig:avl"></a></p>
+<p><img src="img/avl.png" alt="AVL 树同时满足二叉搜索顺序和高度平衡。"></p>
+<p><strong>二叉搜索顺序。</strong> 对每个 <code>Node</code>，左子树所有值都严格小于当前节点的值，右子树所有值都严格大于当前节点的值。图中根节点为 <code>50</code>，左子树的值位于 <code>9–23</code>，右子树的值位于 <code>54–76</code>。这不是只对根节点成立，而是对每个节点都成立。例如节点 <code>12</code> 的左、右孩子也分别小于和大于 <code>12</code>。</p>
+<p><strong>高度平衡。</strong> 对每个节点，左右子树的高度差至多为 <code>1</code>。图中根节点的两棵子树等高；节点 <code>72</code> 的左子树高度为 <code>2</code>，比右子树恰好多 <code>1</code>。</p>
+<p><strong>不变量为什么带来效率？</strong> 顺序约束保证：要找某个值，最多只需沿一条由左转和右转组成的路径。平衡约束保证：这条路径长度为 <code>O(log n)</code>，其中 <code>n</code> 是节点数。因此，在各步操作成本受控的算法实现中，集合操作可以达到对数时间。</p>
+<blockquote>
+<p><strong>译者说明：</strong> 这里引用的是 AVL 算法的复杂度分析；本章精化规格本身并没有形式化证明运行时间。维护高度的方法也会影响实际成本：反复遍历子树重新计算高度，与直接读取已验证的缓存字段，代价不同。</p>
+</blockquote>
+<h2 id="为-avl-树写规格">为 AVL 树写规格<a class="heading-anchor" href="#为-avl-树写规格" aria-label="链接到为 AVL 树写规格">#</a></h2>
+<p>难点是持续维持顺序和平衡。先别急着实现操作，要先告诉 LiquidHaskell：什么样的树才算合法。</p>
+<p><strong>描述顺序。</strong> 定义 <code>AVLL</code> 和 <code>AVLR</code> 两个别名，可以分别读成“AVL 左子树”和“AVL 右子树”，表示所有值都严格小于或严格大于给定值 <code>X</code> 的树：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- | Trees with value less than X
+{-@ type AVLL a X = AVL {v:a | v &lt; X}  @-}
+
+-- | Trees with value greater than X
+{-@ type AVLR a X = AVL {v:a | X &lt; v}  @-}
+</code></pre></div>
+<p><strong>真实高度。</strong> 空树 <code>Leaf</code> 高度为 <code>0</code>；非空节点的高度，等于左右子树较大高度再加 <code>1</code>。不能直接把字段 <code>ah</code> 当作真相，因为它在普通 Haskell 类型里只是一个任意 <code>Int</code>，错误实现完全可能到处填 <code>0</code>。我们需要一个度量函数，真正按树结构计算高度：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ measure realHeight @-}
+realHeight                :: AVL a -&gt; Int
+realHeight Leaf           = 0
+realHeight (Node _ l r _) = nodeHeight l r
+
+{-@ inline nodeHeight @-}
+nodeHeight l r = 1 + max hl hr
+  where
+    hl         = realHeight l
+    hr         = realHeight r
+
+{-@ inline max @-}
+max :: Int -&gt; Int -&gt; Int
+max x y = if x &gt; y then x else y
+</code></pre></div>
+<blockquote>
+<p>原注：<code>inline</code> 注解让这些 Haskell 函数可以被提升到精化逻辑中，并用于其他规格和度量函数。上游原注仍带有待编辑的 <code>FIXME</code> 标记。</p>
+</blockquote>
+<p><strong>检查高度是否真实。</strong> 谓词 <code>isReal</code> 要求给定值 <code>v</code> 恰好等于以 <code>l</code>、<code>r</code> 为子树的节点真实高度：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ inline isReal @-}
+isReal v l r = v == nodeHeight l r
+</code></pre></div>
+<p><strong>描述允许的高度差。</strong> 如果左右子树的真实高度差不超过 <code>n</code>，就称它们满足 <code>n</code> 平衡。用谓词 <code>isBal l r n</code> 表达：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ inline isBal @-}
+isBal l r n = 0 - n &lt;= d &amp;&amp; d &lt;= n
+  where
+    d       = realHeight l - realHeight r
+</code></pre></div>
+<p><strong>合法的 AVL 树。</strong> 现在可以写出<a href="Tutorial_05_Datatypes.html#refineddatatypes">精化数据类型</a>：每个 <code>Node</code> 都要求左右子树满足 <code>1</code> 平衡，而且缓存的高度必须等于真实高度。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ data AVL a = Leaf
+               | Node { key :: a
+                      , l   :: AVLL a key
+                      , r   :: {v:AVLR a key | isBal l v 1}
+                      , ah  :: {v:Nat        | isReal v l r}
+                      }                                  @-}
+</code></pre></div>
+<h2 id="智能构造函数">智能构造函数<a class="heading-anchor" href="#智能构造函数" aria-label="链接到智能构造函数">#</a></h2>
+<p>先用这个类型构造几棵小树，它们也会成为集合 API 的基础。首先定义给定高度的树，以及与另一棵树等高的树：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- | Trees of height N
+{-@ type AVLN a N = {v: AVL a | realHeight v = N} @-}
+
+-- | Trees of height equal to that of another T
+{-@ type AVLT a T = AVLN a {realHeight T} @-}
+</code></pre></div>
+<p><strong>空集合</strong> 用高度为 <code>0</code> 的 <code>Leaf</code> 表示：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ empty :: AVLN a 0 @-}
+empty = Leaf
+</code></pre></div>
+<h3 id="练习-单元素树">练习：单元素树<a class="heading-anchor" href="#练习-单元素树" aria-label="链接到练习：单元素树">#</a></h3>
+<p><code>singleton</code> 要把一个元素变成 AVL 树。修复下面的代码，让 LiquidHaskell 接受它：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ singleton :: a -&gt; AVLN a 1 @-}
+singleton x =  Node x empty empty 0
+</code></pre></div>
+<p>手动保持缓存高度 <code>ah</code> 与真实高度同步，很容易出错，也很繁琐。<a href="Tutorial_09_Case_Study_Lazy_Queues.html#lazyqueue">惰性队列</a>里也遇到了同类问题。常见解决方法是：少直接使用原始数据构造函数，改用 <strong>智能构造函数</strong>，集中计算并填入正确字段。</p>
+<blockquote>
+<p>原注：既然如此，为什么还要缓存高度，而不每次重新计算？请想想两种做法的成本。</p>
+</blockquote>
+<p><strong>智能构造函数。</strong> 它接收当前值、左右子树，再算出正确高度，构造结果。下面先给出待完善的 <code>mkNode</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ mkNode :: a -&gt; l:AVL a -&gt; r:AVL a
+           -&gt; AVLN a {nodeHeight l r}
+  @-}
+mkNode v l r = Node v l r h
+ where
+   h       = 1 + max hl hr
+   hl      = getHeight l
+   hr      = getHeight r
+</code></pre></div>
+<h3 id="练习-构造节点">练习：构造节点<a class="heading-anchor" href="#练习-构造节点" aria-label="链接到练习：构造节点">#</a></h3>
+<p>LiquidHaskell 会拒绝上面的智能构造函数。为什么？请修改实现或规格，让它通过验证。</p>
+<p><strong>提示：</strong> 看看真正的 <code>Node</code> 构造函数经过精化后的类型：它对左右子树有什么要求，又保证了什么？</p>
+<blockquote>
+<p><strong>译者说明：</strong> 原文说明文字在 <code>node</code> 与 <code>mkNode</code> 之间交替命名。这里的练习函数实际叫 <code>mkNode</code>；后续代码使用的 <code>node</code> 是完整源码另外提供的、规格已补全的辅助函数。两者不要当成两个无关算法。</p>
+</blockquote>
+<h2 id="插入元素">插入元素<a class="heading-anchor" href="#插入元素" aria-label="链接到插入元素">#</a></h2>
+<p>接下来向 AVL 树加入元素。第一版的想法很直接：</p>
+<ol>
+<li>根据搜索顺序，找到元素应插入的位置。</li>
+<li>把那个位置的 <code>Leaf</code> 换成单元素树。</li>
+</ol>
+<p>如果用代码表达，就是下面这样：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ insert0    :: (Ord a) =&gt; a -&gt; AVL a -&gt; AVL a @-}
+insert0 y t@(Node x l r _)
+  | y &lt; x      = node x (insert0 y l) r
+  | x &lt; y      = node x l (insert0 y r)
+  | otherwise  = t
+insert0 y Leaf = singleton y
+</code></pre></div>
+<blockquote>
+<p>原注：这里使用的 <code>node</code> 是已经修正的智能构造函数；前面的练习请先自己完成，不要直接查看它的答案。</p>
+</blockquote>
+<p>遗憾的是，<code>insert0</code> 还不够正确。如果把你刚刚完善的 <code>mkNode</code> 用到这里，也会看到 LiquidHaskell 拒绝它：问题不在搜索顺序，而在构造节点时，左右子树可能不再满足平衡要求。</p>
+<p><strong>插入可能增加高度。</strong> 新元素进入某棵子树后，它可能相对兄弟子树变得太高。例如，考虑下面的 <code>t0</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">ghci&gt; let t0 = Node { key = &#39;a&#39;
+                    , l   = Leaf
+                    , r   = Node {key = &#39;d&#39;
+                                 , l  = Leaf
+                                 , r  = Leaf
+                                 , ah = 1 }
+                    , ah = 2}
+</code></pre></div>
+<p>用 <code>insert0</code> 插入排在 <code>&#39;d&#39;</code> 之后的 <code>&#39;e&#39;</code>，得到：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">ghci&gt; insert0 &#39;e&#39; t0
+  Node { key = &#39;a&#39;
+       , l   = Leaf
+       , r   = Node { key = &#39;d&#39;
+                    , l   = Leaf
+                    , r   = Node { key = &#39;e&#39;
+                                 , l   = Leaf
+                                 , r   = Leaf
+                                 , ah  = 1   }
+                    , ah = 2                 }
+       , ah = 3}
+</code></pre></div>
+<p><a id="fig:avl-insert0"></a></p>
+<p><img src="img/avl-insert0.png" alt="直接插入 e 后，右子树变高，原来平衡的树失去平衡。"></p>
+<p>如图所示，<code>&#39;e&#39;</code> 进入 <code>t0</code> 的右子树。右子树原本高度为 <code>1</code>，插入后增至 <code>2</code>；而左子树仍为空，高度为 <code>0</code>，于是高度差过大。</p>
+<blockquote>
+<p><strong>译者说明：</strong> 原文这段文字提到了未在此定义的 <code>insR0</code>，实际展示的入口是 <code>insert0</code>。图和示例要说明的都是“直接递归插入，可能破坏平衡”。</p>
+</blockquote>
+<p><strong>LiquidHaskell 会发现失衡。</strong> <code>insert0</code> 递归返回的类型没有说明高度变化上界，所以检查器只能认为子树可能变高很多；它不能证明随后调用 <code>node</code> 满足平衡条件。更关键的是，这不只是规格不够精确：上面的实际例子已经表明，朴素插入确实会破坏平衡。</p>
+<p>这里得到两点启发：</p>
+<ol>
+<li>正确的插入算法应保证，树高度最多增加 <code>1</code>。</li>
+<li>因此，需要一种重新平衡的方法，处理左右子树高度差达到 <code>2</code> 的情况。</li>
+</ol>
+<h2 id="重新平衡">重新平衡<a class="heading-anchor" href="#重新平衡" aria-label="链接到重新平衡">#</a></h2>
+<p>Adelson-Velsky 和 Landis 的巧妙发现是：通过局部旋转，就可以重新安排节点，恢复平衡。先考虑往左子树 <code>l</code> 插入元素，得到新子树 <code>l&#39;</code> 的情况；往右插入是对称的。</p>
+<p><code>l&#39;</code> 与右子树 <code>r</code> 的相对高度有三种情况：</p>
+<ul>
+<li><strong>RightBig：</strong> <code>r</code> 比 <code>l&#39;</code> 高 <code>2</code>。</li>
+<li><strong>LeftBig：</strong> <code>l&#39;</code> 比 <code>r</code> 高 <code>2</code>。</li>
+<li><strong>NoBig：</strong> 其余情况，即两者高度差不超过 <code>1</code>。</li>
+</ul>
+<p>可以这样描述相关判断：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ inline leftBig @-}
+leftBig l r = diff l r == 2
+
+{-@ inline rightBig @-}
+rightBig l r = diff r l == 2
+
+{-@ inline diff @-}
+diff s t = getHeight s - getHeight t
+</code></pre></div>
+<p><code>getHeight</code> 读取的是缓存高度字段：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ measure getHeight @-}
+getHeight Leaf           = 0
+getHeight (Node _ _ _ n) = n
+</code></pre></div>
+<p>对左侧插入 <code>insL</code> 而言，<strong>RightBig 不可能发生</strong>：<code>l&#39;</code> 不会比原来的 <code>l</code> 更矮，而原来 <code>l</code> 与 <code>r</code> 的高度差已经不超过 <code>1</code>。</p>
+<p>在 <strong>NoBig</strong> 情况下，可以直接通过智能构造函数连接 <code>l&#39;</code> 与 <code>r</code>，因为它们已经平衡。真正麻烦的是 <strong>LeftBig</strong>：需要调整节点，让过高的左侧向右侧转移一部分结构。</p>
+<p><strong>进一步拆分 LeftBig。</strong> <code>l&#39;</code> 不可能为空，因为空树高度为 <code>0</code>，不会比另一棵树高 <code>2</code>。再根据 <code>l&#39;</code> 自己左右子树的高度，分为：</p>
+<ul>
+<li><strong>NoHeavy：</strong> <code>l&#39;</code> 的左右子树等高。</li>
+<li><strong>LeftHeavy：</strong> <code>l&#39;</code> 的左子树更高。</li>
+<li><strong>RightHeavy：</strong> <code>l&#39;</code> 的右子树更高。</li>
+</ul>
+<p><strong>平衡因子</strong> 把这些情况表示成数值。虽然 <code>getHeight</code> 为效率读取缓存，但类型不变量保证它与 <code>realHeight</code> 一致：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ measure balFac @-}
+balFac Leaf           = 0
+balFac (Node _ l r _) = getHeight l - getHeight r
+</code></pre></div>
+<p>根据平衡因子的正负，就能判断哪边更重：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ inline leftHeavy @-}
+leftHeavy  t = balFac t &gt; 0
+
+{-@ inline rightHeavy @-}
+rightHeavy t = balFac t &lt; 0
+
+{-@ inline noHeavy @-}
+noHeavy    t = balFac t == 0
+</code></pre></div>
+<p>把情况分到这一步，所需的旋转方式就清楚了。</p>
+<p><a id="fig:avl-balL0"></a></p>
+<p><img src="img/avl-balL0.png" alt="LeftBig 且 NoHeavy：左子树内部等高时的旋转。"></p>
+<p><strong>NoHeavy 情况。</strong> 如图所示，<code>ll</code> 与 <code>lr</code> 等高，并且都比 <code>r</code> 高 <code>1</code>。因此可以先把 <code>lr</code> 与 <code>r</code> 连起来，再与 <code>ll</code> 连接，以原左子树根节点作为新的根。</p>
+<p>下面的前置条件精确描述当前情况：左子树属于 <code>NoHeavy</code>，并比右子树高 <code>2</code>。返回类型则说明旋转后的高度与输入子树有什么关系：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ balL0 :: x:a
+          -&gt; l:{AVLL a x | noHeavy l}
+          -&gt; r:{AVLR a x | leftBig l r}
+          -&gt; AVLN a {realHeight l + 1 }
+  @-}
+balL0 v (Node lv ll lr _) r = node lv ll (node v lr r)
+</code></pre></div>
+<p><a id="fig:avl-balLL"></a></p>
+<p><img src="img/avl-balLL.png" alt="LeftBig 且 LeftHeavy：左侧的左子树更高时进行单旋转。"></p>
+<p><strong>LeftHeavy 情况。</strong> 此时 <code>ll</code> 比 <code>lr</code> 更高，所以 <code>lr</code> 与 <code>r</code> 等高。同样可以先连接 <code>lr</code>、<code>r</code>，再与左侧连接。与上一种情况一样，输入类型描述旋转条件，输出类型描述结果高度：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ balLL :: x:a
+          -&gt; l:{AVLL a x | leftHeavy l}
+          -&gt; r:{AVLR a x | leftBig l r}
+          -&gt; AVLT a l
+  @-}
+balLL v (Node lv ll lr _) r = node lv ll (node v lr r)
+</code></pre></div>
+<p><a id="fig:avl-balLR"></a></p>
+<p><img src="img/avl-balLR.png" alt="LeftBig 且 RightHeavy：拆开 lr，再组合为平衡树。"></p>
+<p><strong>RightHeavy 情况。</strong> 此时 <code>lr</code> 比 <code>ll</code> 更高，不能简单地把整个 <code>lr</code> 与 <code>r</code> 连起来，否则仍然会太高。于是进一步把 <code>lr</code> 拆成 <code>lrl</code>、<code>lrr</code>，让 <code>lrr</code> 与 <code>r</code> 连接，同时把另一部分放到左边。这次的类型仍然准确表达了旋转的要求和保证：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ balLR :: x:a
+          -&gt; l:{AVLL a x | rightHeavy l}
+          -&gt; r:{AVLR a x | leftBig l r}
+          -&gt; AVLT a l
+  @-}
+balLR v (Node lv ll (Node lrv lrl lrr _) _) r
+  = node lrv (node lv ll lrl) (node v lrr r)
+</code></pre></div>
+<p>如果是右侧更高，也就是 <strong>RightBig</strong>，处理方式与上面完全对称。</p>
+<h3 id="练习-rightbig-noheavy">练习：RightBig、NoHeavy<a class="heading-anchor" href="#练习-rightbig-noheavy" aria-label="链接到练习：RightBig、NoHeavy">#</a></h3>
+<p>完成 <code>balR0</code>，使实现满足给定类型：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ balR0 :: x:a
+          -&gt; l: AVLL a x
+          -&gt; r: {AVLR a x | rightBig l r &amp;&amp; noHeavy r}
+          -&gt; AVLN a {realHeight r + 1}
+  @-}
+balR0 v l r = undefined
+</code></pre></div>
+<h3 id="练习-rightbig-rightheavy">练习：RightBig、RightHeavy<a class="heading-anchor" href="#练习-rightbig-rightheavy" aria-label="链接到练习：RightBig、RightHeavy">#</a></h3>
+<p>完成 <code>balRR</code>，使实现满足给定类型：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ balRR :: x:a
+          -&gt; l: AVLL a x
+          -&gt; r:{AVLR a x | rightBig l r &amp;&amp; rightHeavy r}
+          -&gt; AVLT a r
+  @-}
+balRR v l r = undefined
+</code></pre></div>
+<h3 id="练习-rightbig-leftheavy">练习：RightBig、LeftHeavy<a class="heading-anchor" href="#练习-rightbig-leftheavy" aria-label="链接到练习：RightBig、LeftHeavy">#</a></h3>
+<p>完成 <code>balRL</code>，使实现满足给定类型：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ balRL :: x:a
+          -&gt; l: AVLL a x
+          -&gt; r:{AVLR a x | rightBig l r &amp;&amp; leftHeavy r}
+          -&gt; AVLT a r
+  @-}
+balRL v l r = undefined
+</code></pre></div>
+<p><strong>正确插入。</strong> 现在可以先递归进入合适的子树插入元素，再判断当前属于哪一种情况，调用对应的旋转函数恢复不变量：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ insert :: a -&gt; s:AVL a -&gt; {t: AVL a | eqOrUp s t} @-}
+insert y Leaf = singleton y
+insert y t@(Node x _ _ _)
+  | y &lt; x     = insL y t
+  | y &gt; x     = insR y t
+  | otherwise = t
+</code></pre></div>
+<p><code>eqOrUp s t</code> 表示输出树 <code>t</code> 与输入树 <code>s</code> 等高，或者恰好高 <code>1</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ inline eqOrUp @-}
+eqOrUp s t = d == 0 || d == 1
+  where
+    d      = diff t s
+</code></pre></div>
+<p>主要工作在 <code>insL</code> 与 <code>insR</code> 中完成。先看左侧插入：得到 <code>l&#39;</code> 之后，判断应该选择哪一种旋转。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ insL :: x:a
+         -&gt; t:{AVL a | x &lt; key t &amp;&amp; 0 &lt; realHeight t}
+         -&gt; {v: AVL a | eqOrUp t v}
+  @-}
+insL a (Node v l r _)
+  | isLeftBig &amp;&amp; leftHeavy l&#39;  = balLL v l&#39; r
+  | isLeftBig &amp;&amp; rightHeavy l&#39; = balLR v l&#39; r
+  | isLeftBig                  = balL0 v l&#39; r
+  | otherwise                  = node  v l&#39; r
+  where
+    isLeftBig                  = leftBig l&#39; r
+    l&#39;                         = insert a l
+</code></pre></div>
+<h3 id="练习-右侧插入">练习：右侧插入（★）<a class="heading-anchor" href="#练习-右侧插入" aria-label="链接到练习：右侧插入（★）">#</a></h3>
+<p><code>insR</code> 与 <code>insL</code> 对称。请补全它，检查自己是否已经掌握了这些情况：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ insR :: x:a
+         -&gt; t:{AVL a  | key t &lt; x &amp;&amp; 0 &lt; realHeight t }
+         -&gt; {v: AVL a | eqOrUp t v}
+  @-}
+insR = undefined
+</code></pre></div>
+<h2 id="把重新平衡重构为独立操作">把重新平衡重构为独立操作<a class="heading-anchor" href="#把重新平衡重构为独立操作" aria-label="链接到把重新平衡重构为独立操作">#</a></h2>
+<p>下一步实现删除 <code>delete</code>。总体策略与插入相似：</p>
+<ol>
+<li>先找到并删除元素，暂时不处理高度变化。</li>
+<li>利用“删除使高度至多降低 <code>1</code>”这一性质。</li>
+<li>用旋转修复高度降低造成的失衡。</li>
+</ol>
+<p>不过，之前的 <code>insert</code> 设计让我们有点被动：真正插入元素的逻辑，与判断、执行旋转的逻辑混在一起了。<code>leftBig</code>、<code>leftHeavy</code> 等判断都写在 <code>insL</code> 中。虽然这样也正确，但删除时就必须重复这套分支判断。</p>
+<p>更合适的办法是把重新平衡提取为独立函数，让插入和删除共同使用：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ bal :: x:a
+        -&gt; l:AVLL a x
+        -&gt; r:{AVLR a x | isBal l r 2}
+        -&gt; {t:AVL a | reBal l r t}
+  @-}
+bal v l r
+  | isLeftBig  &amp;&amp; leftHeavy l  = balLL v l r
+  | isLeftBig  &amp;&amp; rightHeavy l = balLR v l r
+  | isLeftBig                  = balL0 v l r
+  | isRightBig &amp;&amp; leftHeavy r  = balRL v l r
+  | isRightBig &amp;&amp; rightHeavy r = balRR v l r
+  | isRightBig                 = balR0 v l r
+  | otherwise                  = node  v l r
+  where
+    isLeftBig                  = leftBig l r
+    isRightBig                 = rightBig l r
+</code></pre></div>
+<p><code>bal</code> 汇集了原来 <code>insL</code>、<code>insR</code> 中的条件判断和旋转调用。它接收根值 <code>x</code>，以及相对于 <code>x</code> 满足搜索顺序的左右子树。两棵子树高度差至多为 <code>2</code>：这是因为它们原本相差至多 <code>1</code>，然后其中一边发生了一次插入或删除。</p>
+<p>结果是一棵合法 AVL 树，还满足 <code>reBal l r t</code>。这个谓词包含两部分：</p>
+<ul>
+<li><strong><code>bigHt</code>：</strong> 输出 <code>t</code> 的高度，等于较高那棵输入子树的高度，或者比它高 <code>1</code>。</li>
+<li><strong><code>balHt</code>：</strong> 如果输入两棵子树本来就平衡，高度差不超过 <code>1</code>，那么输出高度必须恰好等于把两者直接连成一个节点时的高度。</li>
+</ul>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ inline reBal @-}
+reBal l r t = bigHt l r t &amp;&amp; balHt l r t
+
+{-@ inline balHt @-}
+balHt l r t = not (isBal l r 1) || isReal (realHeight t) l r
+
+{-@ inline bigHt @-}
+bigHt l r t = lBig &amp;&amp; rBig
+  where
+    lBig    = not (hl &gt;= hr) || (eqOrUp l t)
+    rBig    = (hl &gt;= hr)     || (eqOrUp r t)
+    hl      = realHeight l
+    hr      = realHeight r
+</code></pre></div>
+<p>这样，<strong>插入</strong> 就变得很简单：递归插入到合适子树，然后调用 <code>bal</code> 修复失衡。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ insert&#39; :: a -&gt; s:AVL a -&gt; {t: AVL a | eqOrUp s t} @-}
+insert&#39; a t@(Node v l r n)
+  | a &lt; v      = bal v (insert&#39; a l) r
+  | a &gt; v      = bal v l (insert&#39; a r)
+  | otherwise  = t
+insert&#39; a Leaf = singleton a
+</code></pre></div>
+<h2 id="删除元素">删除元素<a class="heading-anchor" href="#删除元素" aria-label="链接到删除元素">#</a></h2>
+<p>现在可以按类似方式实现 <code>delete</code>。递归分支很简单：进入相应子树删除元素，再调用 <code>bal</code> 整理结果。注意规格要求，输出 <code>t</code> 的高度与输入 <code>s</code> 相同，或至多低 <code>1</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ delete    :: a -&gt; s:AVL a -&gt; {t:AVL a | eqOrDn s t} @-}
+delete y (Node x l r _)
+  | y &lt; x     = bal x (delete y l) r
+  | x &lt; y     = bal x l (delete y r)
+  | otherwise = merge x l r
+delete _ Leaf = Leaf
+
+{-@ inline eqOrDn @-}
+eqOrDn s t = eqOrUp t s
+</code></pre></div>
+<p><strong>真正找到目标时</strong> 稍微复杂些：删除当前根值 <code>x</code> 后，调用 <code>merge</code> 合并左右子树 <code>l</code>、<code>r</code>。当左右都非空时，从右子树中拿出最小元素，作为替代的新根。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ merge :: x:a -&gt; l:AVLL a x -&gt; r:{AVLR a x | isBal l r 1}
+          -&gt; {t:AVL a | bigHt l r t}
+  @-}
+merge _ Leaf r = r
+merge _ l Leaf = l
+merge x l r    = bal y l r&#39;
+  where
+   (y, r&#39;)     = getMin r
+</code></pre></div>
+<p><code>getMin</code> 递归寻找最左边的节点，也就是最小值，并同时返回移除该节点之后的剩余树。递归返回的左子树 <code>l&#39;</code> 可能比原来的 <code>l</code> 矮 <code>1</code>，所以与右子树 <code>r</code> 重新连接时，还要调用 <code>bal</code> 恢复平衡。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">getMin (Node x Leaf r _) = (x, r)
+getMin (Node x l r _)    = (x&#39;, bal x l&#39; r)
+  where
+    (x&#39;, l&#39;)             = getMin l
+</code></pre></div>
+<h2 id="功能正确性">功能正确性<a class="heading-anchor" href="#功能正确性" aria-label="链接到功能正确性">#</a></h2>
+<p>前面已经实现了一套不太容易写对的树操作。有 LiquidHaskell 检查作为帮助，我们可以验证旋转是否保持搜索顺序、平衡条件和高度关系。这些不变量对正确性和效率都很重要。</p>
+<p>不过，到目前为止，类型还没有完整描述 <strong>功能正确性</strong>：这些操作是否真的实现了集合 API？例如，插入之后是否保留全部旧元素，并增加目标元素；删除之后是否恰好移除了目标元素？我们需要像<a href="Tutorial_10_Case_Study_Associative_Maps.html#mapapi">映射一章</a>那样，明确说明这些语义。</p>
+<p>具体分三步：</p>
+<ol>
+<li>定义树包含的元素集合。</li>
+<li>用类型说明每个操作应当怎样改变这个集合。</li>
+<li>验证实现，必要时添加<a href="Tutorial_10_Case_Study_Associative_Maps.html#lemmas">幽灵引理</a>。</li>
+</ol>
+<p>前面已经做过一次类似工作，这里很适合用来巩固理解。</p>
+<p><strong>元素集合。</strong> 用下面的度量函数，描述 AVL 树包含的元素：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ measure elems @-}
+elems                :: (Ord a) =&gt; AVL a -&gt; S.Set a
+elems (Node x l r _) = (S.singleton x) `S.union`
+                       (elems l)       `S.union`
+                       (elems r)
+elems Leaf           = S.empty
+</code></pre></div>
+<p>接下来用这个度量函数，为 AVL 库补上真正的集合语义。</p>
+<h3 id="练习-成员查询">练习：成员查询<a class="heading-anchor" href="#练习-成员查询" aria-label="链接到练习：成员查询">#</a></h3>
+<p>完成 <code>member</code>，检查元素是否在 AVL 树中：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- FIXME https://github.com/ucsd-progsys/liquidhaskell/issues/332
+{-@ member :: (Ord a) =&gt; x:a -&gt; t:AVL a -&gt; {v: Bool | v &lt;=&gt; hasElem x t} @-}
+member x t = undefined
+
+{-@ type BoolP P = {v:Bool | v &lt;=&gt; P} @-}
+
+{-@ inline hasElem @-}
+hasElem x t = True
+-- FIXME hasElem x t = S.member x (elems t)
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明：</strong> 上游不仅把 <code>member</code> 留为 <code>undefined</code>，还暂时把 <code>hasElem</code> 写成了恒为 <code>True</code>，真正的集合成员关系放在 <code>FIXME</code> 注释里。因此，照着当前占位谓词证明，只能得到一个没有表达目标语义的结果。完成练习时，需要一起补全有实际含义的规格，并处理原文标注的工具版本问题。</p>
+</blockquote>
+<h3 id="练习-插入后的集合">练习：插入后的集合<a class="heading-anchor" href="#练习-插入后的集合" aria-label="链接到练习：插入后的集合">#</a></h3>
+<p>在 <code>insert&#39;</code> 的基础上得到 <code>insertAPI</code>，明确要求结果包含所有旧元素及新插入的元素：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ insertAPI :: (Ord a) =&gt; a -&gt; s:AVL a -&gt; {t:AVL a | addElem x s t} @-}
+insertAPI x s = insert&#39; x s
+
+{-@ inline addElem @-}
+addElem       :: Ord a =&gt; a -&gt; AVL a -&gt; AVL a -&gt; Bool
+addElem x s t = True
+-- FIXME addElem x s t = (elems t) == (elems s) `S.union` (S.singleton x)
+</code></pre></div>
+<h3 id="练习-删除后的集合">练习：删除后的集合<a class="heading-anchor" href="#练习-删除后的集合" aria-label="链接到练习：删除后的集合">#</a></h3>
+<p>在 <code>delete</code> 的基础上得到 <code>deleteAPI</code>，明确要求结果包含所有旧元素，但不包含被删除的元素：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ deleteAPI :: (Ord a) =&gt; a -&gt; s:AVL a -&gt; {t: AVL a | delElem x s t} @-}
+deleteAPI x s = delete x s
+
+{-@ inline delElem @-}
+delElem       :: Ord a =&gt; a -&gt; AVL a -&gt; AVL a -&gt; Bool
+delElem x s t = True
+-- FIXME delElem x s t = (elems t) == (elems s) `S.difference` (S.singleton x)
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明：</strong> 上游这里的 <code>addElem</code>、<code>delElem</code> 也都暂时返回 <code>True</code>，注释才表达预期的集合等式；这不构成集合语义的证明。此外，两个展示签名的第一个参数只写成 <code>a</code>，后置条件却引用 <code>x</code>，完整修复时需要显式绑定这个参数，例如 <code>x:a</code>。这里保留原代码，便于与上游核对，不能把这些占位规格当作已经完成的验收结果。</p>
+</blockquote>
+</article><nav class="chapter-pagination" aria-label="章节翻页"><a href="Tutorial_11_Case_Study_Pointers.html"><small>上一章</small><strong>11 指针与字节</strong></a><a href="glossary.html"><small>继续查阅</small><strong>中英术语表</strong></a></nav><footer class="page-footer"><p>原著 Ranjit Jhala 与贡献者 · 中文翻译与讲解</p><p><a href="about.html">来源与译本说明</a><span>·</span><a href="LICENSE">MIT License</a><span>·</span><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_01_Introduction.html">英文教程</a></p></footer></main><aside class="toc" aria-label="本页目录"><p>本页内容</p><nav><a class="toc-depth-2" href="#什么是-avl-树">什么是 AVL 树</a><a class="toc-depth-2" href="#为-avl-树写规格">为 AVL 树写规格</a><a class="toc-depth-2" href="#智能构造函数">智能构造函数</a><a class="toc-depth-3" href="#练习-单元素树">练习：单元素树</a><a class="toc-depth-3" href="#练习-构造节点">练习：构造节点</a><a class="toc-depth-2" href="#插入元素">插入元素</a><a class="toc-depth-2" href="#重新平衡">重新平衡</a><a class="toc-depth-3" href="#练习-rightbig-noheavy">练习：RightBig、NoHeavy</a><a class="toc-depth-3" href="#练习-rightbig-rightheavy">练习：RightBig、RightHeavy</a><a class="toc-depth-3" href="#练习-rightbig-leftheavy">练习：RightBig、LeftHeavy</a><a class="toc-depth-3" href="#练习-右侧插入">练习：右侧插入（★）</a><a class="toc-depth-2" href="#把重新平衡重构为独立操作">把重新平衡重构为独立操作</a><a class="toc-depth-2" href="#删除元素">删除元素</a><a class="toc-depth-2" href="#功能正确性">功能正确性</a><a class="toc-depth-3" href="#练习-成员查询">练习：成员查询</a><a class="toc-depth-3" href="#练习-插入后的集合">练习：插入后的集合</a><a class="toc-depth-3" href="#练习-删除后的集合">练习：删除后的集合</a></nav><a class="back-top" href="#main-content">回到顶部 ↑</a></aside></div>
+  <button class="nav-backdrop" id="nav-backdrop" aria-label="关闭章节导航" tabindex="-1" hidden></button>
+  <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><h2 id="search-title">搜索教程</h2><button class="dialog-close" id="search-close" aria-label="关闭搜索">Esc</button></div><label for="search-input" class="sr-only">输入中文、英文或代码名称</label><div class="search-input-wrap"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><input id="search-input" type="search" placeholder="试试「不变量」、measure、ByteString…" autocomplete="off"></div><p class="search-status" id="search-status" role="status">搜索全部章节与术语；多个关键词用空格分隔。</p><ol id="search-results" class="search-results"></ol></dialog>
+  <div class="sr-only" id="live-status" aria-live="polite"></div>
+</body>
+</html>

@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="理解命题、算术、未解释函数，以及求解器怎样检查验证条件。">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>2. 逻辑与 SMT · LiquidHaskell 中文教程</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>try{const t=localStorage.getItem('lh-cn-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}</script>
+  <script src="search-index.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-page="Tutorial_02_Logic">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar"><div class="topbar-inner">
+    <button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开章节导航" aria-controls="chapter-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">λ</span><span>LiquidHaskell <span class="brand-language">中文教程</span></span></a>
+    <div class="top-actions"><button class="search-button" data-open-search aria-label="搜索教程"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><span>搜索教程</span><kbd>Ctrl K</kbd></button><button class="icon-button" id="theme-toggle" aria-label="切换明暗主题" title="切换明暗主题"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.1A8.7 8.7 0 0 1 10.9 3.5 8.7 8.7 0 1 0 20.5 13.1Z"/></svg></button><a class="repo-link" href="https://github.com/longlong921/liquidhaskell-cn">GitHub <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+  </div></header>
+  <div class="layout "><aside class="sidebar" id="chapter-navigation" aria-label="教程导航">
+    <a class="sidebar-home " href="index.html"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/></svg> 阅读首页</a>
+    <div class="nav-group"><p class="nav-label">I · 精化类型</p><ol start="1"><li><a href="Tutorial_01_Introduction.html" ><span class="nav-number">01</span><span>引言</span></a></li><li><a href="Tutorial_02_Logic.html" aria-current="page" class="active"><span class="nav-number">02</span><span>逻辑与 SMT</span></a></li><li><a href="Tutorial_03_Basic.html" ><span class="nav-number">03</span><span>精化类型</span></a></li><li><a href="Tutorial_04_Polymorphism.html" ><span class="nav-number">04</span><span>多态</span></a></li><li><a href="Tutorial_05_Datatypes.html" ><span class="nav-number">05</span><span>精化数据类型</span></a></li></ol></div><div class="nav-group"><p class="nav-label">II · 度量函数</p><ol start="6"><li><a href="Tutorial_06_Measure_Bool.html" ><span class="nav-number">06</span><span>布尔度量</span></a></li><li><a href="Tutorial_07_Measure_Int.html" ><span class="nav-number">07</span><span>数值度量</span></a></li><li><a href="Tutorial_08_Measure_Set.html" ><span class="nav-number">08</span><span>集合度量</span></a></li></ol></div><div class="nav-group"><p class="nav-label">III · 完整案例</p><ol start="9"><li><a href="Tutorial_09_Case_Study_Lazy_Queues.html" ><span class="nav-number">09</span><span>惰性队列</span></a></li><li><a href="Tutorial_10_Case_Study_Associative_Maps.html" ><span class="nav-number">10</span><span>键值映射</span></a></li><li><a href="Tutorial_11_Case_Study_Pointers.html" ><span class="nav-number">11</span><span>指针与字节</span></a></li><li><a href="Tutorial_12_Case_Study_AVL.html" ><span class="nav-number">12</span><span>AVL 树</span></a></li></ol></div>
+    <div class="nav-extras"><a href="guide.html" >阅读与练习指南</a><a href="glossary.html" >中英术语表</a><a href="about.html" >译本说明与来源</a></div>
+    <div class="sidebar-note"><span class="status-dot"></span>12 章完整译文<br><small>原文示例 · 练习 · 译者说明</small></div>
+  </aside><main id="main-content" tabindex="-1"><div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div><header class="chapter-header"><p class="eyebrow">第 02 章 <span>/</span> 精化类型</p><h1>逻辑与 SMT</h1><p class="chapter-subtitle">自动证明背后的基本规则</p><div class="chapter-links"><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_02_Logic.html">对照英文原文 ↗</a><a href="examples/Tutorial_02_Logic.lhs" download>下载原始示例 ↓</a></div></header><div class="reading-note"><strong>阅读提示</strong> 代码与练习保留原貌；标为「译者说明」的内容是补充讲解。运行前请阅读<a href="guide.html#environment">环境说明</a>。</div><article class="prose"><span class="chapter-anchor" id="logic-smt"></span>
+<p>很快我们就会看到：</p>
+<blockquote>
+<p><strong>精化类型 = 类型 + 逻辑谓词。</strong></p>
+</blockquote>
+<p>先花一点时间说明，本教程所说的“逻辑谓词”究竟是什么。我们会介绍它的 <strong>语法</strong>，也就是可以写成什么样；以及它的 <strong>语义</strong>，也就是这些写法表达什么含义。</p>
+<blockquote>
+<p><strong>原注</strong>：如果你已经熟悉这些内容，例如知道 SMT 指 Satisfiability Modulo Theories（可满足性模理论），也知道 QF-UFLIA 指无量词的未解释函数与线性整数算术理论，可以直接进入下一章。</p>
+</blockquote>
+<h2 id="syntax">语法：谓词可以写成什么样<a class="heading-anchor" href="#syntax" aria-label="链接到语法：谓词可以写成什么样">#</a></h2>
+<p>可以先把逻辑谓词理解为一种“结果是布尔值的表达式”。它看起来很像 Haskell，但只采用其中一个受限制的子集。下面按常量、变量、表达式和谓词来定义它的语法。</p>
+<p><strong>常量 <code>c</code></strong> 就是数值常量：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">    c := 0, 1, 2, ...
+</code></pre></div>
+<blockquote>
+<p><strong>原注</strong>：看到 <code>:=</code> 时，可以读成“定义为”。</p>
+</blockquote>
+<p><strong>变量 <code>v</code></strong> 可以是 <code>x</code>、<code>y</code>、<code>z</code> 等名字，它们指向源程序中绑定的值：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">    v := x, y, z, ...
+</code></pre></div>
+<p><strong>表达式 <code>e</code></strong> 有以下几种形式。它可以由变量和常量做线性算术组合，也可以是未解释函数的应用：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">    e := v                      -- variable
+       | c                      -- constant
+       | (e + e)                -- addition
+       | (e - e)                -- subtraction
+       | (c * e)                -- multiplication by constant
+       | (v e1 e2 ... en)       -- uninterpreted function application
+       | (if p then e else e)   -- if-then-else
+</code></pre></div>
+<p>这里依次列出：变量、常量、加法、减法、乘以常量、函数应用，以及条件表达式。例如：</p>
+<ul>
+<li><code>x + y - z</code>；</li>
+<li><code>2 * x</code>；</li>
+<li><code>1 + size x</code>。</li>
+</ul>
+<p><strong>关系 <code>r</code></strong> 是常见的比较运算符，依次表示相等、不等、大于等于、小于等于、大于、小于：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">    r := ==               -- equality
+       | /=               -- disequality
+       | &gt;=               -- greater than or equal
+       | &lt;=               -- less than or equal
+       | &gt;                -- greater than
+       | &lt;                -- less than
+</code></pre></div>
+<p><strong>谓词 <code>p</code></strong> 可以是比较两个表达式得到的原子命题，也可以是谓词函数的应用，还可以把已有谓词用逻辑运算连接起来：</p>
+<ul>
+<li><code>&amp;&amp;</code>：并且；</li>
+<li><code>||</code>：或者；</li>
+<li><code>==&gt;</code>：蕴含，<code>p ==&gt; q</code> 读作“如果 <code>p</code> 成立，那么 <code>q</code> 成立”；</li>
+<li><code>&lt;=&gt;</code>：当且仅当，即 <code>p</code> 推出 <code>q</code>，同时 <code>q</code> 也推出 <code>p</code>；</li>
+<li><code>not</code>：否定。</li>
+</ul>
+<p>完整写法如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">    p := (e r e)                -- binary relation
+       | (v e1 e2 ... en)       -- predicate (or alias) application
+       | (p &amp;&amp; p)               -- and
+       | (p || p)               -- or
+       | (p =&gt; p) | (p ==&gt; p)   -- implies
+       | (p &lt;=&gt; p)              -- iff
+       | (not p)                -- negation
+       | true | True
+       | false | False
+</code></pre></div>
+<p>例如：</p>
+<ul>
+<li><code>x + y &lt;= 3</code>；</li>
+<li><code>null x</code>；</li>
+<li><code>x &lt; 10 ==&gt; y &lt; 10 ==&gt; x + y &lt; 20</code>；</li>
+<li><code>0 &lt; x + y &lt;=&gt; 0 &lt; y + x</code>。</li>
+</ul>
+<h2 id="semantics">语义：谓词表达什么意思<a class="heading-anchor" href="#semantics" aria-label="链接到语义：谓词表达什么意思">#</a></h2>
+<p>语法说明“什么样的式子可以写”，语义则说明“写下来的式子是什么意思”。直观地说，谓词就像一个返回布尔值的 Haskell 函数：<code>&amp;&amp;</code>、<code>||</code>、<code>not</code> 还是熟悉的逻辑运算，再加上 <code>==&gt;</code> 和 <code>&lt;=&gt;</code>。</p>
+<p><strong>蕴含 <code>==&gt;</code></strong> 可以用下面的 Haskell 函数表示。暂时不用深究注解，只需知道它声明：输出是一个 <code>Bool</code>，而且恰好等于输入 <code>p</code>、<code>q</code> 在逻辑上的蕴含关系。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ (==&gt;) :: p:Bool -&gt; q:Bool -&gt; {v:Bool | v &lt;=&gt; (p ==&gt; q)} @-}
+False ==&gt; False = True
+False ==&gt; True  = True
+True  ==&gt; True  = True
+True  ==&gt; False = False
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明</strong>：蕴含只有在“前提为真、结论为假”时才为假。前提不成立时，整条“如果……那么……”并没有被反例推翻，所以结果为真。</p>
+</blockquote>
+<p><strong>当且仅当 <code>&lt;=&gt;</code></strong> 对应下面的函数：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ (&lt;=&gt;) :: p:Bool -&gt; q:Bool -&gt; {v:Bool | v &lt;=&gt; (p &lt;=&gt; q)} @-}
+False &lt;=&gt; False = True
+False &lt;=&gt; True  = False
+True  &lt;=&gt; True  = True
+True  &lt;=&gt; False = False
+</code></pre></div>
+<blockquote>
+<p><strong>原注</strong>：当两边都是 <code>Bool</code> 时，<code>&lt;=&gt;</code> 与 <code>==</code> 的结果相同。</p>
+</blockquote>
+<p><strong>环境（environment）</strong> 记录变量各自的 Haskell 类型。比如，把下面这个环境叫作 <code>G</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">    x :: Int
+    y :: Int
+    z :: Int
+</code></pre></div>
+<p>它说明 <code>x</code>、<code>y</code>、<code>z</code> 都具有 <code>Int</code> 类型。</p>
+<p><strong>赋值（assignment）</strong> 则是在环境规定的类型内，为每个变量指定具体值。例如：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">    x := 1
+    y := 2
+    z := 3
+</code></pre></div>
+<p>这就是 <code>G</code> 中的一次赋值：<code>x</code>、<code>y</code>、<code>z</code> 分别取整数 <code>1</code>、<code>2</code>、<code>3</code>。</p>
+<p>给定一次赋值，<strong>谓词就可以求值为 <code>True</code> 或 <code>False</code></strong>。例如：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">    x + y &gt; 10
+</code></pre></div>
+<p>在上面那次赋值下，它的结果是 <code>False</code>；换成下面这次赋值，结果就是 <code>True</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">    x := 10
+    y := 10
+    z := 20
+</code></pre></div>
+<p>如果在一个环境里，<strong>至少存在一次赋值</strong> 使某个谓词为真，就称这个谓词是 <strong>可满足的（satisfiable）</strong>。例如，在 <code>G</code> 中：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">    x + y == z
+</code></pre></div>
+<p>是可满足的，因为上面那组 <code>10</code>、<code>10</code>、<code>20</code> 就能让它成立。</p>
+<p>如果在一个环境里，<strong>每一次合法赋值</strong> 都使谓词为真，就称它是 <strong>有效的（valid）</strong>，也可以直观地理解为“总成立”。例如：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">    x &lt; 10 || x == 10 || x &gt; 10
+</code></pre></div>
+<p>无论 <code>x</code> 是多少，它必然小于、等于或大于 <code>10</code>，因此这个谓词在 <code>G</code> 中有效。</p>
+<blockquote>
+<p><strong>译者说明</strong>：“可满足”只要求找到一种成立的情况；“有效”则要求不存在任何不成立的情况。验证程序时，我们通常需要后者：只要前提满足，结论就必须成立。</p>
+</blockquote>
+<h2 id="verification-conditions">验证条件：从程序变成逻辑问题<a class="heading-anchor" href="#verification-conditions" aria-label="链接到验证条件：从程序变成逻辑问题">#</a></h2>
+<p>LiquidHaskell 不需要实际执行程序来检查这些性质。它大致分两步判断程序是否满足规格：</p>
+<ol>
+<li>把代码和类型一起转换为一组 <strong>验证条件（verification conditions，简称 VC）</strong>。这些条件都是逻辑谓词；证明它们有效，就能建立相应的程序性质。具体转换过程可参见<a href="http://goto.ucsd.edu/~rjhala/liquid/liquid_types.pdf">原始论文</a>。</li>
+<li>把验证条件交给 <a href="http://en.wikipedia.org/wiki/Satisfiability_Modulo_Theories">SMT 求解器</a>，询问它们是否有效。验证成功，程序就被判定满足相应规格；不能完成验证，则不会得到通过。</li>
+</ol>
+<p><strong>SMT 求解器不会枚举所有赋值。</strong> 如果变量涉及整数、列表等，可能的情况通常是无限的，根本枚举不完。求解器使用的是符号算法：根据公式之间的关系，推导它是否成立。这些方法来自数十年的数学逻辑与判定过程研究；想进一步了解，可以阅读 <a href="https://people.eecs.berkeley.edu/~necula/Papers/nelson-thesis.pdf">Greg Nelson 的博士论文</a>。</p>
+<p><strong>限制逻辑的范围，是为了让问题落在可判定的片段中。</strong> 本教程介绍的方法因此可以高度自动化：你用类型写出所需性质，用 Haskell 写出实现，通常不需要手工操作证明过程。</p>
+<p>这种自动化也有代价：精化条件必须使用所支持的逻辑来表达。不过，稍微转换一下表达方式，仍然能描述相当丰富的性质。</p>
+<blockquote>
+<p><strong>原注</strong>：尤其是未解释函数，可以帮助我们构建许多更复杂的抽象。</p>
+<p><strong>译者说明</strong>：这里描述的是本教程聚焦的逻辑与工作方式，不表示所有版本、所有扩展、所有输入问题都能迅速求解。求解失败或超时，也不能直接当成已经找到了真实程序错误。</p>
+</blockquote>
+<h2 id="examples-propositions">命题逻辑例子<a class="heading-anchor" href="#examples-propositions" aria-label="链接到命题逻辑例子">#</a></h2>
+<p>接下来通过一些具体谓词，培养对逻辑和“总成立”的直觉。下面的式子属于我们的精化逻辑，但会写成普通的 Haskell 表达式，这样既容易阅读，也可以让 LiquidHaskell 检查它们。</p>
+<p>先定义两个精化类型：<code>TRUE</code> 表示结果一定为 <code>True</code> 的布尔值，<code>FALSE</code> 表示结果一定为 <code>False</code> 的布尔值。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type TRUE  = {v:Bool | v    } @-}
+{-@ type FALSE = {v:Bool | not v} @-}
+</code></pre></div>
+<blockquote>
+<p><strong>原注</strong>：这种写法会在<a href="Tutorial_03_Basic.html#propositions">布尔值与命题</a>一节中进一步解释。</p>
+</blockquote>
+<p>有效谓词可以具有 <code>TRUE</code> 类型。最简单的例子就是 <code>True</code> 本身：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ ex0 :: TRUE @-}
+ex0 = True
+</code></pre></div>
+<p>当然，<code>False</code> 不满足 <code>TRUE</code> 的要求，下面这个例子应当被拒绝：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ ex0&#39; :: TRUE @-}
+ex0&#39; = False
+</code></pre></div>
+<p>加入变量以后，就能表达更有意思的命题。下面说的是：一个布尔值要么成立，要么不成立。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ ex1 :: Bool -&gt; TRUE @-}
+ex1 b = b || not b
+</code></pre></div>
+<p>同一个布尔值不可能既为真又为假，所以 <code>b &amp;&amp; not b</code> 的结果恒为 <code>False</code>。下面的 <code>FALSE</code> 规格因此成立：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ ex2 :: Bool -&gt; FALSE @-}
+ex2 b = b &amp;&amp; not b
+</code></pre></div>
+<p>接下来看看蕴含。<code>p ==&gt; q</code> 表示：如果 <code>p</code> 为真，<code>q</code> 也必须为真。假如 <code>a</code> 和 <code>b</code> 都为真，那么 <code>a</code> 为真，<code>b</code> 也为真，因此以下命题成立：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ ex3 :: Bool -&gt; Bool -&gt; TRUE @-}
+ex3 a b = (a &amp;&amp; b) ==&gt; a
+
+{-@ ex4 :: Bool -&gt; Bool -&gt; TRUE @-}
+ex4 a b = (a &amp;&amp; b) ==&gt; b
+</code></pre></div>
+<h3 id="implications-and-or">练习：蕴含与“或”<a class="heading-anchor" href="#implications-and-or" aria-label="链接到练习：蕴含与“或”">#</a></h3>
+<p>如果把 <code>&amp;&amp;</code> 换成 <code>||</code>，下面的公式就不再总成立了。你能只调整变量的位置，<strong>不改变运算符</strong>，让它成为有效公式吗？</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ ex3&#39; :: Bool -&gt; Bool -&gt; TRUE @-}
+ex3&#39; a b = (a || b) ==&gt; a
+</code></pre></div>
+<p>下面两条公式表达的是<a href="http://en.wikipedia.org/wiki/Modus_ponens">肯定前件规则（modus ponens）</a>：如果已经知道“<code>a</code> 推出 <code>b</code>”，又知道 <code>a</code> 成立，那么 <code>b</code> 必须成立。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ ex6 :: Bool -&gt; Bool -&gt; TRUE @-}
+ex6 a b = (a &amp;&amp; (a ==&gt; b)) ==&gt; b
+
+{-@ ex7 :: Bool -&gt; Bool -&gt; TRUE @-}
+ex7 a b = a ==&gt; (a ==&gt; b) ==&gt; b
+</code></pre></div>
+<p>还记得 <code>p &lt;=&gt; q</code> 吗？只有当 <code>p</code>、<code>q</code> 的布尔值相同，结果才为 <code>True</code>。因此，它可以表达两个命题的逻辑等价。比如，<a href="http://en.wikipedia.org/wiki/De_Morgan%27s_laws">德摩根律</a>的一种形式是：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ exDeMorgan1 :: Bool -&gt; Bool -&gt; TRUE @-}
+exDeMorgan1 a b = not (a || b) &lt;=&gt; (not a &amp;&amp; not b)
+</code></pre></div>
+<h3 id="de-morgans-law">练习：另一条德摩根律<a class="heading-anchor" href="#de-morgans-law" aria-label="链接到练习：另一条德摩根律">#</a></h3>
+<p>下面这条德摩根律写错了。请修改它，让公式总成立。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ exDeMorgan2 :: Bool -&gt; Bool -&gt; TRUE @-}
+exDeMorgan2 a b = not (a &amp;&amp; b) &lt;=&gt; (not a &amp;&amp; not b)
+</code></pre></div>
+<h2 id="examples-arithmetic">算术例子<a class="heading-anchor" href="#examples-arithmetic" aria-label="链接到算术例子">#</a></h2>
+<p>再来看看包含算术运算的谓词。最简单的式子不带变量：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ ax0 :: TRUE @-}
+ax0 = 1 + 1 == 2
+</code></pre></div>
+<p>而求值结果为 <code>False</code> 的式子，自然不能具有 <code>TRUE</code> 类型：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ ax0&#39; :: TRUE @-}
+ax0&#39; = 1 + 1 == 3
+</code></pre></div>
+<p><strong>SMT 求解器通过推理判断有效性，而不是穷举。</strong> 例如：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ ax1 :: Int -&gt; TRUE @-}
+ax1 x = x &lt; x + 1
+</code></pre></div>
+<p>按通常的整数算术规律，这个式子等价于 <code>0 &lt; 1</code>，所以不依赖 <code>x</code> 的具体值，总是成立。求解器无需把无限多个 <code>x</code> 都试一遍，就能得到这个结论。这种有效性检查正是 LiquidHaskell 的核心。</p>
+<blockquote>
+<p><strong>译者说明：算术模型</strong>：这里是在数学整数模型下解释推理。Haskell 的 <code>Int</code> 是有界机器整数；例如在上界处，<code>x + 1</code> 的机器行为不能直接按无界整数理解。生产代码必须核对工具采用的模型，并明确处理溢出或证明取值范围；需要无界整数语义时可考虑 <code>Integer</code>。本译文保留原始示例，没有把它们改写成已经完成机器整数溢出证明的代码。</p>
+</blockquote>
+<p>算术运算还可以与命题逻辑组合：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ ax2 :: Int -&gt; TRUE @-}
+ax2 x = (x &lt; 0) ==&gt; (0 &lt;= 0 - x)
+
+{-@ ax3 :: Int -&gt; Int -&gt; TRUE @-}
+ax3 x y = (0 &lt;= x) ==&gt; (0 &lt;= y) ==&gt; (0 &lt;= x + y)
+
+{-@ ax4 :: Int -&gt; Int -&gt; TRUE @-}
+ax4 x y = (x == y - 1) ==&gt; (x + 2 == y + 1)
+
+{-@ ax5 :: Int -&gt; Int -&gt; Int -&gt; TRUE @-}
+ax5 x y z =   (x &lt;= 0 &amp;&amp; x &gt;= 0)
+          ==&gt; (y == x + z)
+          ==&gt; (y == z)
+</code></pre></div>
+<h3 id="addition-and-order">练习：加法与大小关系<a class="heading-anchor" href="#addition-and-order" aria-label="链接到练习：加法与大小关系">#</a></h3>
+<p>下面的公式不是总成立的。你知道原因吗？请修改 <code>==&gt;</code> 左边的 <strong>假设</strong>，让它成为有效公式。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ ax6 :: Int -&gt; Int -&gt; TRUE @-}
+ax6 x y = True ==&gt; (x &lt;= x + y)
+</code></pre></div>
+<h2 id="examples-uninterpreted-function">未解释函数：不知道函数内部，也能推理<a class="heading-anchor" href="#examples-uninterpreted-function" aria-label="链接到未解释函数：不知道函数内部，也能推理">#</a></h2>
+<p>在精化逻辑里，我们把某些函数符号称为 <strong>未解释函数（uninterpreted functions）</strong>，意思是 SMT 求解器不知道它们的实现。求解器只需要知道一个基本规则：<strong>相同的输入，得到相同的输出</strong>。这个规则称为同余公理（axiom of congruence）。</p>
+<p>用下面的例子，可以检查这一规则：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ congruence :: (Int -&gt; Int) -&gt; Int -&gt; Int -&gt; TRUE @-}
+congruence f x y = (x == y) ==&gt; (f x == f y)
+</code></pre></div>
+<p>请记住，这里不是在执行代码；我们甚至没有 <code>f</code> 的定义，因此也不能靠计算具体结果来验证它。但无论 <code>f</code> 的解释是什么，这条公式都满足同余公理，因此有效。</p>
+<p>再看一个有趣的例子。你能想出为什么下面的谓词总成立吗？SMT 求解器可以判断出来：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ fx1 :: (Int -&gt; Int) -&gt; Int -&gt; TRUE @-}
+fx1 f x =   (x == f (f (f x)))
+        ==&gt; (x == f (f (f (f (f x)))))
+        ==&gt; (x == f x)
+</code></pre></div>
+<p>为了体会未解释函数有什么用，我们先写一个计算列表长度的 <code>size</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ measure size @-}
+{-@ size :: [a] -&gt; Nat @-}
+size        :: [a] -&gt; Int
+size []     = 0
+size (x:xs) = 1 + size xs
+</code></pre></div>
+<p>现在可以验证下面这个谓词：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ fx0 :: [a] -&gt; [a] -&gt; TRUE @-}
+fx0 xs ys = (xs == ys) ==&gt; (size xs == size ys)
+</code></pre></div>
+<p>要证明它，求解器不需要知道 <code>size</code> 究竟怎么算，只需要知道它是一个函数：相等的列表经过同一个函数，结果也相等。</p>
+<p>需要利用 <code>size</code> 的定义时，我们再把有关信息加入谓词。例如，想证明下面的性质：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ fx2 :: a -&gt; [a] -&gt; TRUE @-}
+fx2 x xs = 0 &lt; size ys
+  where
+    ys   = x : xs
+</code></pre></div>
+<p>LiquidHaskell 实际交给 SMT 求解器的验证条件会表达两件事：列表长度非负；因为 <code>ys</code> 是 <code>x : xs</code>，所以 <code>ys</code> 比 <code>xs</code> 恰好多一个元素。</p>
+<blockquote>
+<p><strong>原注</strong>：不用担心，我们会在<a href="Tutorial_05_Datatypes.html#autosmart">精化数据类型</a>一章继续解释这个过程。</p>
+</blockquote>
+<p>这个验证条件可以写成：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ fx2VC :: _ -&gt; _ -&gt; _ -&gt; TRUE @-}
+fx2VC x xs ys =   (0 &lt;= size xs)
+              ==&gt; (size ys == 1 + size xs)
+              ==&gt; (0 &lt; size ys)
+</code></pre></div>
+<h2 id="recap">本章回顾<a class="heading-anchor" href="#recap" aria-label="链接到本章回顾">#</a></h2>
+<p>本章明确了这份教程中“逻辑谓词”的含义：</p>
+<ol>
+<li>它有一套受限制的语法，对应一部分返回 <code>Bool</code> 的 Haskell 表达式。</li>
+<li>正是这种限制，让我们可以使用 SMT 求解器判断谓词是否 <strong>有效</strong>，即是否对所有合法赋值都成立。</li>
+<li>求解器靠符号推理完成检查，不需要逐个枚举并计算所有情况。</li>
+</ol>
+<p>下一章将用这些谓词，为真实程序 <strong>写规格</strong>，并 <strong>验证规格</strong>。</p>
+</article><nav class="chapter-pagination" aria-label="章节翻页"><a href="Tutorial_01_Introduction.html"><small>上一章</small><strong>01 引言</strong></a><a href="Tutorial_03_Basic.html"><small>下一章</small><strong>03 精化类型</strong></a></nav><footer class="page-footer"><p>原著 Ranjit Jhala 与贡献者 · 中文翻译与讲解</p><p><a href="about.html">来源与译本说明</a><span>·</span><a href="LICENSE">MIT License</a><span>·</span><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_01_Introduction.html">英文教程</a></p></footer></main><aside class="toc" aria-label="本页目录"><p>本页内容</p><nav><a class="toc-depth-2" href="#syntax">语法：谓词可以写成什么样</a><a class="toc-depth-2" href="#semantics">语义：谓词表达什么意思</a><a class="toc-depth-2" href="#verification-conditions">验证条件：从程序变成逻辑问题</a><a class="toc-depth-2" href="#examples-propositions">命题逻辑例子</a><a class="toc-depth-3" href="#implications-and-or">练习：蕴含与“或”</a><a class="toc-depth-3" href="#de-morgans-law">练习：另一条德摩根律</a><a class="toc-depth-2" href="#examples-arithmetic">算术例子</a><a class="toc-depth-3" href="#addition-and-order">练习：加法与大小关系</a><a class="toc-depth-2" href="#examples-uninterpreted-function">未解释函数：不知道函数内部，也能推理</a><a class="toc-depth-2" href="#recap">本章回顾</a></nav><a class="back-top" href="#main-content">回到顶部 ↑</a></aside></div>
+  <button class="nav-backdrop" id="nav-backdrop" aria-label="关闭章节导航" tabindex="-1" hidden></button>
+  <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><h2 id="search-title">搜索教程</h2><button class="dialog-close" id="search-close" aria-label="关闭搜索">Esc</button></div><label for="search-input" class="sr-only">输入中文、英文或代码名称</label><div class="search-input-wrap"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><input id="search-input" type="search" placeholder="试试「不变量」、measure、ByteString…" autocomplete="off"></div><p class="search-status" id="search-status" role="status">搜索全部章节与术语；多个关键词用空格分隔。</p><ol id="search-results" class="search-results"></ol></dialog>
+  <div class="sr-only" id="live-status" aria-live="polite"></div>
+</body>
+</html>

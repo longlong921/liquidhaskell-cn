@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="从除零、缺失键和越界访问出发，认识精化类型要解决的问题。">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>1. 引言 · LiquidHaskell 中文教程</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>try{const t=localStorage.getItem('lh-cn-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}</script>
+  <script src="search-index.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-page="Tutorial_01_Introduction">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar"><div class="topbar-inner">
+    <button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开章节导航" aria-controls="chapter-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">λ</span><span>LiquidHaskell <span class="brand-language">中文教程</span></span></a>
+    <div class="top-actions"><button class="search-button" data-open-search aria-label="搜索教程"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><span>搜索教程</span><kbd>Ctrl K</kbd></button><button class="icon-button" id="theme-toggle" aria-label="切换明暗主题" title="切换明暗主题"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.1A8.7 8.7 0 0 1 10.9 3.5 8.7 8.7 0 1 0 20.5 13.1Z"/></svg></button><a class="repo-link" href="https://github.com/longlong921/liquidhaskell-cn">GitHub <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+  </div></header>
+  <div class="layout "><aside class="sidebar" id="chapter-navigation" aria-label="教程导航">
+    <a class="sidebar-home " href="index.html"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/></svg> 阅读首页</a>
+    <div class="nav-group"><p class="nav-label">I · 精化类型</p><ol start="1"><li><a href="Tutorial_01_Introduction.html" aria-current="page" class="active"><span class="nav-number">01</span><span>引言</span></a></li><li><a href="Tutorial_02_Logic.html" ><span class="nav-number">02</span><span>逻辑与 SMT</span></a></li><li><a href="Tutorial_03_Basic.html" ><span class="nav-number">03</span><span>精化类型</span></a></li><li><a href="Tutorial_04_Polymorphism.html" ><span class="nav-number">04</span><span>多态</span></a></li><li><a href="Tutorial_05_Datatypes.html" ><span class="nav-number">05</span><span>精化数据类型</span></a></li></ol></div><div class="nav-group"><p class="nav-label">II · 度量函数</p><ol start="6"><li><a href="Tutorial_06_Measure_Bool.html" ><span class="nav-number">06</span><span>布尔度量</span></a></li><li><a href="Tutorial_07_Measure_Int.html" ><span class="nav-number">07</span><span>数值度量</span></a></li><li><a href="Tutorial_08_Measure_Set.html" ><span class="nav-number">08</span><span>集合度量</span></a></li></ol></div><div class="nav-group"><p class="nav-label">III · 完整案例</p><ol start="9"><li><a href="Tutorial_09_Case_Study_Lazy_Queues.html" ><span class="nav-number">09</span><span>惰性队列</span></a></li><li><a href="Tutorial_10_Case_Study_Associative_Maps.html" ><span class="nav-number">10</span><span>键值映射</span></a></li><li><a href="Tutorial_11_Case_Study_Pointers.html" ><span class="nav-number">11</span><span>指针与字节</span></a></li><li><a href="Tutorial_12_Case_Study_AVL.html" ><span class="nav-number">12</span><span>AVL 树</span></a></li></ol></div>
+    <div class="nav-extras"><a href="guide.html" >阅读与练习指南</a><a href="glossary.html" >中英术语表</a><a href="about.html" >译本说明与来源</a></div>
+    <div class="sidebar-note"><span class="status-dot"></span>12 章完整译文<br><small>原文示例 · 练习 · 译者说明</small></div>
+  </aside><main id="main-content" tabindex="-1"><div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div><header class="chapter-header"><p class="eyebrow">第 01 章 <span>/</span> 精化类型</p><h1>引言</h1><p class="chapter-subtitle">为什么类型正确的程序仍会出错</p><div class="chapter-links"><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_01_Introduction.html">对照英文原文 ↗</a><a href="examples/Tutorial_01_Introduction.lhs" download>下载原始示例 ↓</a></div></header><div class="reading-note"><strong>阅读提示</strong> 代码与练习保留原貌；标为「译者说明」的内容是补充讲解。运行前请阅读<a href="guide.html#environment">环境说明</a>。</div><article class="prose"><span class="chapter-anchor" id="intro"></span>
+<p>Haskell 的一大优点，是它有一套聪明的类型系统：许多不变量可以在编译时检查，从而把大量<a href="#getting-started">运行时错误</a>提前挡住。</p>
+<p>不过，普通类型检查通过，并不意味着程序就不会出错。我们先看几个例子，再认识精化类型能补上的那一块。</p>
+<blockquote>
+<p><strong>译者说明</strong>：本章保留原教程的历史示例和输出，用它们解释“类型正确”和“满足业务条件”之间的差距。<code>unsafeIndex</code>、旧版 <code>text</code> 的 <code>takeWord16</code> 等示例，不代表当前版本仍有相同 API、相同输出或已知漏洞。请勿在处理真实数据的进程中运行故意越界的示例。</p>
+</blockquote>
+<h2 id="gowrong">类型没错，程序仍然会出错<a class="heading-anchor" href="#gowrong" aria-label="链接到类型没错，程序仍然会出错">#</a></h2>
+<h3 id="除以零">除以零<a class="heading-anchor" href="#除以零" aria-label="链接到除以零">#</a></h3>
+<p>下面这个看起来很普通的函数，会计算一个整数列表的平均值：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">average    :: [Int] -&gt; Int
+average xs = sum xs `div` length xs
+</code></pre></div>
+<p>传入非空列表时，结果正是我们想要的：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">ghci&gt; average [10, 20, 30, 40]
+25
+</code></pre></div>
+<p>但传入空列表，就会因为除以零而崩溃：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">ghci&gt; average []
+*** Exception: divide by zero
+</code></pre></div>
+<blockquote>
+<p><strong>原注</strong>：可以把 <code>average</code> 写得更有防御性，让它返回 <code>Maybe</code> 或 <code>Either</code>。原作者提醒：如果后续代码最终仍要求得到一个 <code>Int</code>，而输入本来就无效，那么届时仍然需要面对“没有有效结果”这件事。</p>
+<p><strong>译者说明</strong>：这不是说 <code>Maybe</code>、<code>Either</code> 没有用。对于外部输入，它们是正常且重要的错误处理方式：调用方可以拒绝输入、提示用户或选择替代行为。精化类型补充的是另一种能力：在条件已经建立以后，静态证明内部代码满足这些条件。</p>
+</blockquote>
+<h3 id="查找不存在的键">查找不存在的键<a class="heading-anchor" href="#查找不存在的键" aria-label="链接到查找不存在的键">#</a></h3>
+<p>键值映射几乎已经像列表一样常见。Go、Python、JavaScript、Lua 等现代语言都内置了类似结构，Haskell 也经常使用它：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">ghci&gt; :m +Data.Map 
+ghci&gt; let m = fromList [ (&quot;haskell&quot;, &quot;lazy&quot;)
+                       , (&quot;ocaml&quot;  , &quot;eager&quot;)]
+
+ghci&gt; m ! &quot;haskell&quot;
+&quot;lazy&quot;
+</code></pre></div>
+<p>然而，查找不存在的键，又会带来一类令人头疼的错误：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">ghci&gt; m ! &quot;javascript&quot;
+&quot;*** Exception: key is not in the map
+</code></pre></div>
+<blockquote>
+<p><strong>原注</strong>：这里也可以用 <code>Maybe</code> 返回查找结果；原作者想强调的是，调用方依然需要处理“键不存在”的情况。</p>
+</blockquote>
+<h3 id="段错误">段错误<a class="heading-anchor" href="#段错误" aria-label="链接到段错误">#</a></h3>
+<p>你可能会问：Haskell 不是一门安全的语言吗，怎么还会段错误？原因在于，安全的上层抽象最终仍依赖机器代码，或者 C 等底层实现。以常用的 <code>vector</code> 库为例：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">ghci&gt; :m +Data.Vector
+ghci&gt; let v = fromList [&quot;haskell&quot;, &quot;ocaml&quot;]
+ghci&gt; unsafeIndex v 0
+&quot;haskell&quot;
+</code></pre></div>
+<p>如果上层传入的非法值一路流入底层，不安全操作就可能出问题。原教程展示了下面的越界访问及其输出：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">ghci&gt; unsafeIndex v 3
+&#39;ghci&#39; terminated by signal SIGSEGV ...
+</code></pre></div>
+<blockquote>
+<p><strong>原注</strong>：为什么要使用名称里带 <code>unsafe</code> 的函数？原作者的理由是速度；即使改用会检查边界的版本，错误输入也可能变成运行时异常。作者也特别感谢库开发者明确标出了 <code>unsafe</code>：在多层抽象之下，调用者未必容易判断哪些操作有前提条件。</p>
+<p><strong>译者说明</strong>：这里并没有断言不安全版本一定能带来可观的性能提升。是否使用它，应由实际测量和完整的边界保证决定；越界结果也不保证每次都是相同的段错误。</p>
+</blockquote>
+<h3 id="比崩溃更糟-越界读取秘密">比崩溃更糟：越界读取秘密<a class="heading-anchor" href="#比崩溃更糟-越界读取秘密" aria-label="链接到比崩溃更糟：越界读取秘密">#</a></h3>
+<p>对于某些程序，悄悄读出不该读的数据，比直接崩溃更严重。<code>text</code> 是 Haskell 的高性能文本处理库，也用于构建 Web 服务。原教程使用的是旧版、基于 UTF-16 的接口：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">ghci&gt; :m +Data.Text Data.Text.Unsafe
+ghci&gt; let t = pack &quot;Voltage&quot;
+ghci&gt; takeWord16 5 t
+&quot;Volta&quot;
+</code></pre></div>
+<p>攻击者如果精心构造一个超出文本长度的参数，就可能让底层操作读取文本以外的内存。原文演示如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">ghci&gt; takeWord16 20 t
+&quot;Voltage\1912\3148\SOH\NUL\15928\2486\SOH\NUL&quot;
+</code></pre></div>
+<p>这次调用返回了紧跟在字符串 <code>Voltage</code> 后面的内存内容。那些内容可能只是无意义的字节，也可能是别的数据，甚至是口令等敏感信息。</p>
+<blockquote>
+<p><strong>译者说明</strong>：本节是在说明缺少边界约束可能产生的后果，不是在报告当前 <code>text</code> 的漏洞。后续阅读时，重点应放在“长度必须在合法范围内”这一前提条件上。</p>
+</blockquote>
+<h2 id="refinement-types">精化类型能做什么<a class="heading-anchor" href="#refinement-types" aria-label="链接到精化类型能做什么">#</a></h2>
+<p><strong>精化类型（refinement types）</strong> 允许我们用 <strong>谓词</strong> 丰富 Haskell 类型，准确描述函数的合法输入、合法输出、容器中允许保存的值等。这里的谓词来自特定的逻辑体系，SMT 求解器可以对这些逻辑中的问题进行自动判定。</p>
+<p>把类型和谓词放在一起，就可以写出 <strong>契约</strong>：调用函数之前必须满足什么条件，函数返回之后又保证什么条件。精化类型检查会在编译阶段检查实现是否遵守契约。因此，只要相关前提、规格和底层模型成立，就可以在运行之前排除已经写入规格的那些错误，例如除零和越界。</p>
+<p><strong>LiquidHaskell</strong> 就是 Haskell 的精化类型检查器。本教程将介绍如何用它改善程序，并让编程变得更有意思。</p>
+<blockquote>
+<p><strong>原注</strong>：如果你熟悉 Coq 等证明助手里的依赖类型，可以把精化类型理解为一类受限制的依赖类型：限制所使用的逻辑，牺牲一部分表达能力，换取更高程度的自动化。</p>
+<p><strong>译者说明</strong>：通过检查，表示实现满足已经表达出来的规格，并且依赖所声明的可信假设；它不等于“程序的所有方面都没有 bug”。外部输入校验、未建模的溢出、FFI 及其他信任边界，都需要单独考虑。</p>
+</blockquote>
+<h2 id="audience">这份教程适合谁<a class="heading-anchor" href="#audience" aria-label="链接到这份教程适合谁">#</a></h2>
+<p>如果你符合下面的一些描述，就可以跟着学：</p>
+<ul>
+<li>懂一点基础算术和逻辑；</li>
+<li>知道 <code>nand</code>（与非）和 <code>xor</code>（异或）的区别；</li>
+<li>用过某种带类型的语言，例如 ML、Haskell、Scala、F# 或 Typed Racket；</li>
+<li>知道 <code>forall a. a -&gt; a</code> 大致是什么意思；</li>
+<li>希望编辑器能尽早提醒你某段代码可能无限循环；</li>
+<li>希望自己的程序少一些 bug。</li>
+</ul>
+<h2 id="getting-started">开始动手<a class="heading-anchor" href="#getting-started" aria-label="链接到开始动手">#</a></h2>
+<blockquote>
+<p><strong>译者说明：版本背景</strong>：下面是原教程在 <strong>2020 年 7 月</strong> 给出的工作方式与命令，保留它们是为了忠实呈现原文。LiquidHaskell 与 GHC 的版本存在匹配要求。准备实际环境时，请先查看<a href="https://ucsd-progsys.github.io/liquidhaskell/install/">官方安装说明</a>，不要把这些历史命令当成适用于任意当前版本的安装保证。本中文站展示和保存示例，不在浏览器内执行 LiquidHaskell 检查。</p>
+</blockquote>
+<p>从 2020 年 7 月起，LiquidHaskell 0.8.10 及以后的版本开始以 <a href="https://downloads.haskell.org/~ghc/8.10.1/docs/html/users_guide/extending_ghc.html">GHC 插件</a>的形式提供。大体流程是：</p>
+<ol>
+<li>将 LiquidHaskell 加入项目依赖，并按相应版本的要求启用它。</li>
+<li>编译代码时，GHC 同时报告 LiquidHaskell 的类型错误。</li>
+<li>编辑器已有的 Haskell 工具也就可以显示这些错误。</li>
+</ol>
+<p>除了 Cabal 依赖，LiquidHaskell 还需要一个兼容 <code>SMTLIB2</code> 的求解器可执行程序。原文列出了：</p>
+<ul>
+<li><a href="https://github.com/Z3Prover/z3">Z3</a>，原作者推荐；</li>
+<li><a href="https://cvc4.github.io/">CVC4</a>；</li>
+<li><a href="http://mathsat.fbk.eu/download.html">MathSat</a>。</li>
+</ul>
+<p>本教程使用 literate Haskell，即把说明文字和 Haskell 代码放在同一份文档中的写法。<a href="http://github.com/ucsd-progsys/liquidhaskell-tutorial.git">原始代码仓库</a>可以下载。原作者强烈建议你一边阅读，一边修改代码，尤其要亲自做练习。</p>
+<p><strong>第 1 步：克隆原始教程仓库。</strong></p>
+<div class="code-block"><div class="code-toolbar"><span>Shell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-bash">git clone --recursive https://github.com/ucsd-progsys/liquidhaskell-tutorial.git
+</code></pre></div>
+<p><strong>第 2 步：尝试构建代码。</strong></p>
+<blockquote>
+<p><strong>译者说明</strong>：先运行 <code>cd liquidhaskell-tutorial</code> 进入刚克隆的仓库目录，再执行下面的构建命令。</p>
+</blockquote>
+<div class="code-block"><div class="code-toolbar"><span>Shell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-bash">cabal v2-build
+</code></pre></div>
+<p>或者：</p>
+<div class="code-block"><div class="code-toolbar"><span>Shell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-bash">stack build --fast --file-watch
+</code></pre></div>
+<p>在原教程对应的环境里，如果工具设置正确，编译会停在一个 LiquidHaskell 类型错误上：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">src/Tutorial_01_Introduction.lhs:30:27: error:
+    Liquid Type Mismatch
+    .
+    The inferred type
+      VV : {v : GHC.Types.Int | v &gt;= 0
+                                &amp;&amp; v == len xs}
+    .
+    is not a subtype of the required type
+      VV : {VV : GHC.Types.Int | VV /= 0}
+    .
+    in the context
+      xs : {v : [GHC.Types.Int] | len v &gt;= 0}
+   |
+30 | average xs = sum xs `div` length xs
+   |                           ^^^^^^^^^
+</code></pre></div>
+<p>这里的错误正是我们希望工具找到的：列表长度只保证非负，不能保证非零，所以不能直接拿它做除数。</p>
+<p><strong>第 3 步：反复修改并编译 <code>src/</code> 里的代码，直到不再出现 LiquidHaskell 类型错误。</strong></p>
+<p>这个工作流程可以接入你习惯使用的 GHC/Haskell 编辑器工具，让编辑器自动显示 LH 错误。</p>
+<p>如果选择把片段复制到原教程的在线演示中，而不是克隆仓库，可能需要给 <code>liquid</code> 传入 <code>--no-termination</code>，或者在文件开头加入 <code>{-@ LIQUID &quot;--no-termination&quot; @-}</code>。默认情况下，LiquidHaskell 会尝试检查被分析代码的终止性；本教程中的一些写法，并不能让它直接看出为什么一定会终止。</p>
+<blockquote>
+<p><strong>译者说明</strong>：<code>--no-termination</code> 的含义是关闭终止性检查，不是证明程序会终止，也不应作为生产代码中消除报错的通用办法。阅读这些示例时，要把“其他性质的验证”和“终止性证明”区分开。</p>
+</blockquote>
+<p>原作者说明，这份教程仍在完善，欢迎反馈和建议，最好通过 GitHub 的 pull request 提交。</p>
+<p>现在开始吧！</p>
+</article><nav class="chapter-pagination" aria-label="章节翻页"><a href="index.html"><small>从这里开始</small><strong>教程首页</strong></a><a href="Tutorial_02_Logic.html"><small>下一章</small><strong>02 逻辑与 SMT</strong></a></nav><footer class="page-footer"><p>原著 Ranjit Jhala 与贡献者 · 中文翻译与讲解</p><p><a href="about.html">来源与译本说明</a><span>·</span><a href="LICENSE">MIT License</a><span>·</span><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_01_Introduction.html">英文教程</a></p></footer></main><aside class="toc" aria-label="本页目录"><p>本页内容</p><nav><a class="toc-depth-2" href="#gowrong">类型没错，程序仍然会出错</a><a class="toc-depth-3" href="#除以零">除以零</a><a class="toc-depth-3" href="#查找不存在的键">查找不存在的键</a><a class="toc-depth-3" href="#段错误">段错误</a><a class="toc-depth-3" href="#比崩溃更糟-越界读取秘密">比崩溃更糟：越界读取秘密</a><a class="toc-depth-2" href="#refinement-types">精化类型能做什么</a><a class="toc-depth-2" href="#audience">这份教程适合谁</a><a class="toc-depth-2" href="#getting-started">开始动手</a></nav><a class="back-top" href="#main-content">回到顶部 ↑</a></aside></div>
+  <button class="nav-backdrop" id="nav-backdrop" aria-label="关闭章节导航" tabindex="-1" hidden></button>
+  <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><h2 id="search-title">搜索教程</h2><button class="dialog-close" id="search-close" aria-label="关闭搜索">Esc</button></div><label for="search-input" class="sr-only">输入中文、英文或代码名称</label><div class="search-input-wrap"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><input id="search-input" type="search" placeholder="试试「不变量」、measure、ByteString…" autocomplete="off"></div><p class="search-status" id="search-status" role="status">搜索全部章节与术语；多个关键词用空格分隔。</p><ol id="search-results" class="search-results"></ol></dialog>
+  <div class="sr-only" id="live-status" aria-live="polite"></div>
+</body>
+</html>

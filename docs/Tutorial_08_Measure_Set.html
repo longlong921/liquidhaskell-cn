@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="从元素集合出发，讨论内容保持、排列、唯一性与 zipper。">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>8. 集合度量 · LiquidHaskell 中文教程</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>try{const t=localStorage.getItem('lh-cn-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}</script>
+  <script src="search-index.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-page="Tutorial_08_Measure_Set">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar"><div class="topbar-inner">
+    <button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开章节导航" aria-controls="chapter-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">λ</span><span>LiquidHaskell <span class="brand-language">中文教程</span></span></a>
+    <div class="top-actions"><button class="search-button" data-open-search aria-label="搜索教程"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><span>搜索教程</span><kbd>Ctrl K</kbd></button><button class="icon-button" id="theme-toggle" aria-label="切换明暗主题" title="切换明暗主题"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.1A8.7 8.7 0 0 1 10.9 3.5 8.7 8.7 0 1 0 20.5 13.1Z"/></svg></button><a class="repo-link" href="https://github.com/longlong921/liquidhaskell-cn">GitHub <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+  </div></header>
+  <div class="layout "><aside class="sidebar" id="chapter-navigation" aria-label="教程导航">
+    <a class="sidebar-home " href="index.html"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/></svg> 阅读首页</a>
+    <div class="nav-group"><p class="nav-label">I · 精化类型</p><ol start="1"><li><a href="Tutorial_01_Introduction.html" ><span class="nav-number">01</span><span>引言</span></a></li><li><a href="Tutorial_02_Logic.html" ><span class="nav-number">02</span><span>逻辑与 SMT</span></a></li><li><a href="Tutorial_03_Basic.html" ><span class="nav-number">03</span><span>精化类型</span></a></li><li><a href="Tutorial_04_Polymorphism.html" ><span class="nav-number">04</span><span>多态</span></a></li><li><a href="Tutorial_05_Datatypes.html" ><span class="nav-number">05</span><span>精化数据类型</span></a></li></ol></div><div class="nav-group"><p class="nav-label">II · 度量函数</p><ol start="6"><li><a href="Tutorial_06_Measure_Bool.html" ><span class="nav-number">06</span><span>布尔度量</span></a></li><li><a href="Tutorial_07_Measure_Int.html" ><span class="nav-number">07</span><span>数值度量</span></a></li><li><a href="Tutorial_08_Measure_Set.html" aria-current="page" class="active"><span class="nav-number">08</span><span>集合度量</span></a></li></ol></div><div class="nav-group"><p class="nav-label">III · 完整案例</p><ol start="9"><li><a href="Tutorial_09_Case_Study_Lazy_Queues.html" ><span class="nav-number">09</span><span>惰性队列</span></a></li><li><a href="Tutorial_10_Case_Study_Associative_Maps.html" ><span class="nav-number">10</span><span>键值映射</span></a></li><li><a href="Tutorial_11_Case_Study_Pointers.html" ><span class="nav-number">11</span><span>指针与字节</span></a></li><li><a href="Tutorial_12_Case_Study_AVL.html" ><span class="nav-number">12</span><span>AVL 树</span></a></li></ol></div>
+    <div class="nav-extras"><a href="guide.html" >阅读与练习指南</a><a href="glossary.html" >中英术语表</a><a href="about.html" >译本说明与来源</a></div>
+    <div class="sidebar-note"><span class="status-dot"></span>12 章完整译文<br><small>原文示例 · 练习 · 译者说明</small></div>
+  </aside><main id="main-content" tabindex="-1"><div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div><header class="chapter-header"><p class="eyebrow">第 08 章 <span>/</span> 度量函数</p><h1>集合度量</h1><p class="chapter-subtitle">验证容器里有哪些元素</p><div class="chapter-links"><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_08_Measure_Set.html">对照英文原文 ↗</a><a href="examples/Tutorial_08_Measure_Set.lhs" download>下载原始示例 ↓</a></div></header><div class="reading-note"><strong>阅读提示</strong> 代码与练习保留原貌；标为「译者说明」的内容是补充讲解。运行前请阅读<a href="guide.html#environment">环境说明</a>。</div><article class="prose"><span class="chapter-anchor" id="setmeasure"></span>
+<p>很多正确性要求，关心的是一个数据结构里 <strong>究竟有哪些元素</strong>，或一个函数会怎样改变这些元素。例如，我们希望：</p>
+<ul>
+<li>排序过程不会凭空增加或丢失输入中的元素。</li>
+<li>资源管理函数不会意外复制资源，或者遗漏仍需跟踪的资源。</li>
+<li>操作语法树的函数能保持作用域正确：用到的变量，都已经在相应作用域内定义过。</li>
+</ul>
+<blockquote>
+<p><strong>译者说明</strong>：原文将第一项称为“输出是输入的一个排列”。但本章的集合规格只记录元素是否出现，<strong>不记录出现次数</strong>。例如 <code>[1,1,2]</code> 与 <code>[1,2,2]</code> 的元素集合相同。要严格证明输出是输入的排列，还需跟踪每个元素的重数，或补充足够的其他条件；仅证明集合相等并不够。</p>
+</blockquote>
+<p>SMT 求解器支持表达力较强的逻辑。除了线性算术和未解释函数，它们也能<a href="http://www.kroening.com/smt-lib-lsm.pdf">判定受支持的集合公式</a>。这一章利用这种能力，为数据结构的元素集合规定不变量，并验证相关接口。</p>
+<h2 id="在规格中谈论集合">在规格中谈论集合<a class="heading-anchor" href="#在规格中谈论集合" aria-label="链接到在规格中谈论集合">#</a></h2>
+<p>首先，我们得有办法在精化逻辑中表示集合。可以自行定义一种 Haskell 类型，但这里直接使用 <code>Data.Set</code> 的 <code>Set a</code>。</p>
+<blockquote>
+<p>原注：<a href="https://ucsd-progsys.github.io/liquidhaskell-blog/2013/03/26/talking-about-sets.lhs/">这篇文章</a>简要介绍了怎样直接使用 LiquidHaskell 内置的集合操作。</p>
+</blockquote>
+<h3 id="从-haskell-集合操作到逻辑集合操作">从 Haskell 集合操作到逻辑集合操作<a class="heading-anchor" href="#从-haskell-集合操作到逻辑集合操作" aria-label="链接到从 Haskell 集合操作到逻辑集合操作">#</a></h3>
+<p>LiquidHaskell 会把 <code>Data.Set</code> 的基础操作提升到精化逻辑。验证环境提供以下 <strong>逻辑函数</strong>，对应同名的 Haskell 函数：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">measure empty        :: Set a
+measure singleton    :: a -&gt; Set a
+measure member       :: a -&gt; Set a -&gt; Bool
+measure union        :: Set a -&gt; Set a -&gt; Set a
+measure intersection :: Set a -&gt; Set a -&gt; Set a
+measure difference   :: Set a -&gt; Set a -&gt; Set a
+</code></pre></div>
+<h3 id="求解器理解这些操作的含义">求解器理解这些操作的含义<a class="heading-anchor" href="#求解器理解这些操作的含义" aria-label="链接到求解器理解这些操作的含义">#</a></h3>
+<p>这些是 SMT 求解器能够 <strong>解释</strong> 的运算符。就像求解器根据算术理论知道，对于所有 <code>x</code>，下面的蕴含成立：</p>
+<p><code>x = 1 + 1 ⇒ x = 2</code></p>
+<p>它也知道这个集合公式成立：</p>
+<p><code>x = {1} ⇒ y = {2} ⇒ x = x ∩ (y ∪ x)</code></p>
+<p>原因是，这些公式属于可判定的集合理论；它可以归约到 McCarthy 更一般的<a href="http://www-formal.stanford.edu/jmc/towards.ps">数组理论</a>。</p>
+<blockquote>
+<p>原注：<a href="http://research.microsoft.com/en-us/um/people/leonardo/fmcad09.pdf">这篇论文</a>介绍了现代 SMT 求解器怎样证明上述一类等式。</p>
+</blockquote>
+<h2 id="quickcheck">证明 QuickCheck 风格的性质<a class="heading-anchor" href="#quickcheck" aria-label="链接到证明 QuickCheck 风格的性质">#</a></h2>
+<p>先做几个热身：使用 LiquidHaskell 证明集合及集合操作的简单定理。</p>
+<h3 id="给集合-api-精确的规格">给集合 API 精确的规格<a class="heading-anchor" href="#给集合-api-精确的规格" aria-label="链接到给集合 API 精确的规格">#</a></h3>
+<p>为了方便陈述定理，可以为 <code>Data.Set</code> 的操作添加精化类型，让签名准确描述相应的集合行为：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">empty        :: {v:Set a | v = empty}
+member       :: x:a
+             -&gt; s:Set a
+             -&gt; {v:Bool | v &lt;=&gt; member x s}
+
+singleton    :: x:a -&gt; {v:Set a | v = singleton x}
+
+union        :: x:Set a
+             -&gt; y:Set a
+             -&gt; {v:Set a | v = union x y}
+
+intersection :: x:Set a
+             -&gt; y:Set a
+             -&gt; {v:Set a | v = intersection x y}
+
+difference   :: x:Set a
+             -&gt; y:Set a
+             -&gt; {v:Set a | v = difference x y}
+</code></pre></div>
+<h3 id="把定理写成总为真的布尔函数">把定理写成总为真的布尔函数<a class="heading-anchor" href="#把定理写成总为真的布尔函数" aria-label="链接到把定理写成总为真的布尔函数">#</a></h3>
+<p>可以用 <a href="https://hackage.haskell.org/package/QuickCheck">QuickCheck</a> 风格来陈述性质：函数接收任意输入，返回一个应当始终为 <code>True</code> 的 <code>Bool</code>。先定义两个类型别名，分别表示恒真的布尔值与恒假的布尔值：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type True  = {v:Bool |     v} @-}
+{-@ type False = {v:Bool | not v} @-}
+</code></pre></div>
+<p>利用 <code>True</code> 这个精化类型，就能陈述定理。例如，前面的简单算术等式写成：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ prop_one_plus_one_eq_two :: _ -&gt; True @-}
+prop_one_plus_one_eq_two x   = (x == 1 + 1) `implies` (x == 2)
+</code></pre></div>
+<p>其中，<code>implies</code> 是布尔值上的蕴含运算：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ implies        :: p:Bool -&gt; q:Bool -&gt; Implies p q  @-}
+implies False _    = True
+implies _     True = True
+implies _    _     = False
+</code></pre></div>
+<p>类型别名 <code>Implies P Q</code> 则定义为：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type Implies P Q = {v:_ | v &lt;=&gt; (P =&gt; Q)} @-}
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明</strong>：这里借用了 QuickCheck 的“性质函数”写法，证明过程本身由 LiquidHaskell 和 SMT 求解器完成。运行 QuickCheck 是另一件事：它会生成测试输入，寻找反例。</p>
+</blockquote>
+<h3 id="Bounded-Addition">练习：有上界的加法<a class="heading-anchor" href="#Bounded-Addition" aria-label="链接到练习：有上界的加法">#</a></h3>
+<p>编写并证明下面的 QuickCheck 风格性质：对于所有 <code>x</code>、<code>y</code>，如果 <code>x &lt; 100</code> 且 <code>y &lt; 100</code>，那么 <code>x + y &lt; 200</code>。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ prop_x_y_200 :: _ -&gt; _ -&gt; True @-}
+prop_x_y_200 x y = False -- fill in the theorem body
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明</strong>：这是教程算术模型里的陈述。若把变量具体解释为有界机器 <code>Int</code>，仅限制上界并不能排除负方向溢出；工程规格还需要相应的范围条件，或使用数学整数语义。</p>
+</blockquote>
+<h3 id="交集满足交换律">交集满足交换律<a class="heading-anchor" href="#交集满足交换律" aria-label="链接到交集满足交换律">#</a></h3>
+<p>交集的交换律可以直接写成下面的性质：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ prop_intersection_comm :: _ -&gt; _ -&gt; True @-}
+prop_intersection_comm x y
+  = (x `intersection` y) == (y `intersection` x)
+</code></pre></div>
+<h3 id="并集满足结合律">并集满足结合律<a class="heading-anchor" href="#并集满足结合律" aria-label="链接到并集满足结合律">#</a></h3>
+<p>同样可以确认并集的结合律：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ prop_union_assoc :: _ -&gt; _ -&gt; _ -&gt; True @-}
+prop_union_assoc x y z
+  = (x `union` (y `union` z)) == (x `union` y) `union` z
+</code></pre></div>
+<h3 id="分配律">分配律<a class="heading-anchor" href="#分配律" aria-label="链接到分配律">#</a></h3>
+<p>对相关运算写出性质，就能检查布尔代数中的分配律。例如，交集对并集满足分配律：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ prop_intersection_dist :: _ -&gt; _ -&gt; _ -&gt; True @-}
+prop_intersection_dist x y z
+  =  x `intersection` (y `union` z)
+     ==
+     (x `intersection` y) `union` (x `intersection` z)
+</code></pre></div>
+<h3 id="错误的-定理-应当被拒绝">错误的“定理”应当被拒绝<a class="heading-anchor" href="#错误的-定理-应当被拒绝" aria-label="链接到错误的“定理”应当被拒绝">#</a></h3>
+<p>当然，我们也希望 LiquidHaskell 拒绝不成立的命题：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ prop_cup_dif_bad :: _ -&gt; _ -&gt; True @-}
+prop_cup_dif_bad x y
+  = pre `implies` (x == ((x `union` y) `difference` y))
+  where
+    pre = True  -- Fix this with a non-trivial precondition
+</code></pre></div>
+<h3 id="Set-Difference">练习：集合的差集<a class="heading-anchor" href="#Set-Difference" aria-label="链接到练习：集合的差集">#</a></h3>
+<p>上面的性质为什么不成立？</p>
+<ol>
+<li>使用 QuickCheck，或者自己推理，找出 <code>prop_cup_dif_bad</code> 的一个 <strong>反例</strong>。</li>
+<li>根据反例，为 <code>pre</code> 选择一个非平凡条件，使命题可以被证明。不要简单地把它改成 <code>False</code>。</li>
+</ol>
+<p>因此，精化类型提供了一种使用 SMT 求解器 <strong>证明</strong> 性质的接口，同时也可以借助 QuickCheck 来寻找反例。</p>
+<blockquote>
+<p>原注：<a href="https://github.com/LeventErkok/sbv">SBV</a> 和 <a href="http://lara.epfl.ch/w/leon">Leon</a> 分别展示了在 Haskell 与 Scala 中通过领域专用语言使用 SMT 求解器的另一种途径。</p>
+</blockquote>
+<h2 id="listelems">了解元素内容的列表 API<a class="heading-anchor" href="#listelems" aria-label="链接到了解元素内容的列表 API">#</a></h2>
+<p>回到主要目标：验证程序性质。首先，为列表 API 添加精化，让类型能跟踪列表中元素的集合。</p>
+<h3 id="列表包含哪些元素">列表包含哪些元素<a class="heading-anchor" href="#列表包含哪些元素" aria-label="链接到列表包含哪些元素">#</a></h3>
+<p>用一个简单的递归度量函数遍历列表，逐项构造元素集合：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ measure elts @-}
+elts        :: (Ord a) =&gt; [a] -&gt; Set a
+elts []     = empty
+elts (x:xs) = singleton x `union` elts xs
+</code></pre></div>
+<p>接下来定义几个实用别名，让后面的规格简洁一些。</p>
+<p><strong>元素集合恰好为 <code>S</code> 的列表：</strong></p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type ListS a S = {v:[a] | elts v = S} @-}
+</code></pre></div>
+<p><strong>空列表：</strong></p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type ListEmp a = ListS a {Set_empty 0} @-}
+</code></pre></div>
+<p><strong>元素集合与列表 <code>X</code> 相同的列表：</strong></p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type ListEq a X = ListS a {elts X}    @-}
+</code></pre></div>
+<p><strong>元素集合包含于列表 <code>X</code> 的元素集合中的列表：</strong></p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type ListSub a X = {v:[a]| Set_sub (elts v) (elts X)} @-}
+</code></pre></div>
+<p><strong>元素集合等于列表 <code>X</code> 与 <code>Y</code> 的元素集合之并的列表：</strong></p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type ListUn a X Y = ListS a {Set_cup (elts X) (elts Y)} @-}
+</code></pre></div>
+<p><strong>元素集合由元素 <code>X</code> 加上列表 <code>Y</code> 的元素集合组成的列表：</strong></p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type ListUn1 a X Y = ListS a {Set_cup (Set_sng X) (elts Y)} @-}
+</code></pre></div>
+<p>度量函数会强化列表构造器的类型。空列表和非空列表构造器会自动获得如下规格：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">data [a] where
+  []  :: ListEmp a
+  (:) :: x:a -&gt; xs:[a] -&gt; ListUn1 a x xs
+</code></pre></div>
+<p>现在试着使用这套新词汇。</p>
+<h3 id="连接列表">连接列表<a class="heading-anchor" href="#连接列表" aria-label="链接到连接列表">#</a></h3>
+<p><code>append&#39;</code> 的输出元素集合，是两个输入列表元素集合的并集：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ append&#39;       :: xs:_ -&gt; ys:_ -&gt; ListUn a xs ys @-}
+append&#39; []     ys = ys
+append&#39; (x:xs) ys = x : append&#39; xs ys
+</code></pre></div>
+<h3 id="Reverse-elements">练习：反转时保留元素集合<a class="heading-anchor" href="#Reverse-elements" aria-label="链接到练习：反转时保留元素集合">#</a></h3>
+<p>为 <code>revHelper</code> 写一个规格，让 <code>reverse&#39;</code> 通过 LiquidHaskell 验证。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ reverse&#39; :: xs:[a] -&gt; ListEq a xs @-}
+reverse&#39; xs = revHelper [] xs
+
+revHelper acc []     = acc
+revHelper acc (x:xs) = revHelper (x:acc) xs
+</code></pre></div>
+<h3 id="Halve">练习：拆分列表 ★<a class="heading-anchor" href="#Halve" aria-label="链接到练习：拆分列表 ★">#</a></h3>
+<p>为 <code>halve</code> 写出规格，让后面的“定理” <code>prop_halve_append</code> 得到证明。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">halve            :: Int -&gt; [a] -&gt; ([a], [a])
+halve 0 xs       = ([], xs)
+halve n (x:y:zs) = (x:xs, y:ys) where (xs, ys) = halve (n-1) zs
+halve _ xs       = ([], xs)
+
+{-@ prop_halve_append  :: _ -&gt; _ -&gt; True @-}
+prop_halve_append n xs = elts xs == elts xs&#39;
+  where
+    xs&#39;      =  append&#39; ys zs
+    (ys, zs) =  halve n xs
+</code></pre></div>
+<p><strong>提示：</strong> 可以回顾<a href="Tutorial_07_Measure_Int.html#listreducing">上一章 <code>partition</code> 的维度规格</a>。那里描述了拆分前后的长度关系，这里要描述元素集合之间的关系。</p>
+<h3 id="Membership">练习：成员判断<a class="heading-anchor" href="#Membership" aria-label="链接到练习：成员判断">#</a></h3>
+<p>给 <code>elem</code> 写一个足够精确的签名，让 <code>test1</code> 和 <code>test2</code> 都通过验证。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ elem      :: (Eq a) =&gt; a -&gt; [a] -&gt; Bool @-}
+elem _ []     = False
+elem x (y:ys) = x == y || elem x ys
+
+{-@ test1 :: True @-}
+test1      = elem 2 [1, 2, 3]
+
+{-@ test2 :: False @-}
+test2      = elem 2 [1, 3]
+</code></pre></div>
+<h2 id="排列与元素保持">排列与元素保持<a class="heading-anchor" href="#排列与元素保持" aria-label="链接到排列与元素保持">#</a></h2>
+<p>接着利用精化的列表 API，检查几个排序函数是否保留输入的元素集合。原文将这个目标称为“返回输入的排列”。</p>
+<blockquote>
+<p>原注：这一节主要关注元素内容，暂时不处理<a href="Tutorial_05_Datatypes.html#orderedlists">有序性不变量</a>，因此继续使用普通列表。<a href="http://goto.ucsd.edu/~rjhala/liquid/haskell/blog/blog/2013/07/29/putting-things-in-order.lhs/">这篇文章</a>介绍了如何用普通列表表达并验证有序性。</p>
+</blockquote>
+<blockquote>
+<p><strong>译者说明</strong>：本节实际证明的是集合保持。要把结论加强为完整的排列关系，还需要证明重复元素的出现次数也保持不变。</p>
+</blockquote>
+<h3 id="插入排序">插入排序<a class="heading-anchor" href="#插入排序" aria-label="链接到插入排序">#</a></h3>
+<p>插入排序是最简单的列表排序方法之一：逐个把输入元素 <code>insert</code> 到已有输出列表中的适当位置，逐步建立结果。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">insert x []     = [x]
+insert x (y:ys)
+  | x &lt;= y      = x : y : ys
+  | otherwise   = y : insert x ys
+</code></pre></div>
+<p><code>insert</code> 的输出包含输入列表 <code>xs</code> 中的所有元素，再加上新元素 <code>x</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ insert :: x:a -&gt; xs:[a] -&gt; ListUn1 a x xs @-}
+</code></pre></div>
+<p>利用这个签名，就能证明整个排序过程保留输入的元素集合：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ insertSort :: (Ord a) =&gt; xs:[a] -&gt; ListEq a xs @-}
+insertSort []     = []
+insertSort (x:xs) = insert x (insertSort xs)
+</code></pre></div>
+<h3 id="Merge">练习：合并列表<a class="heading-anchor" href="#Merge" aria-label="链接到练习：合并列表">#</a></h3>
+<p>修正 <code>merge</code> 的规格，使 <code>prop_merge_app</code> 通过验证。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ merge :: xs:[a] -&gt; ys:[a] -&gt; [a] @-}
+merge [] ys          = ys
+merge xs []          = xs
+merge (x:xs) (y:ys)
+  | x &lt;= y           = x : merge xs (y:ys)
+  | otherwise        = y : merge (x:xs) ys
+
+{-@ prop_merge_app   :: _ -&gt; _ -&gt; True   @-}
+prop_merge_app xs ys = elts zs == elts zs&#39;
+  where
+    zs               = append&#39; xs ys
+    zs&#39;              = merge   xs ys
+</code></pre></div>
+<h3 id="Merge-Sort">练习：归并排序 ★★<a class="heading-anchor" href="#Merge-Sort" aria-label="链接到练习：归并排序 ★★">#</a></h3>
+<p>写好上面 <code>merge</code> 的规格后，你应该能证明下面这个令人意外的 <code>mergeSort</code> 签名。</p>
+<ol>
+<li>先确认给出的签名确实能通过验证。</li>
+<li>我们显然不希望排序函数的规格说结果是空列表。找出并修正错误，使得不能再证明结果为空，而能证明结果属于 <code>ListEq a xs</code>。</li>
+</ol>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ mergeSort :: (Ord a) =&gt; xs:[a] -&gt; ListEmp a @-}
+mergeSort []  = []
+mergeSort xs  = merge (mergeSort ys) (mergeSort zs)
+  where
+   (ys, zs)   = halve mid xs
+   mid        = length xs `div` 2
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明</strong>：这里还有一个必须分清的细节：原始章节关闭了终止性检查，而代码缺少处理单元素列表的基础分支。对非空输入，它可能一直递归，并不是真的算出 <code>[]</code>。此时“结果满足空列表规格”只是关于 <strong>如果计算返回</strong> 的部分正确性陈述，不能代替终止性证明。练习修复的也包括这个递归基础情形。</p>
+</blockquote>
+<h2 id="唯一性-不允许重复元素">唯一性：不允许重复元素<a class="heading-anchor" href="#唯一性-不允许重复元素" aria-label="链接到唯一性：不允许重复元素">#</a></h2>
+<p>我们常常希望一个集合式容器里 <strong>没有重复项</strong>。例如，文件句柄或系统资源被重复跟踪，可能导致不正确的管理行为。</p>
+<p><a href="http://xmonad.org/">xmonad</a> 窗口管理器使用较复杂的 zipper 结构记录活跃窗口，并小心维护“没有重复窗口”的不变量。下面先为列表表达这个性质，再把它用于一个简化的 zipper。</p>
+<h3 id="描述没有重复元素">描述没有重复元素<a class="heading-anchor" href="#描述没有重复元素" aria-label="链接到描述没有重复元素">#</a></h3>
+<p>表达唯一性有很多方法，最简单的是定义一个度量函数：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ measure unique @-}
+unique        :: (Ord a) =&gt; [a] -&gt; Bool
+unique []     = True
+unique (x:xs) = unique xs &amp;&amp; not (member x (elts xs))
+</code></pre></div>
+<p>再为没有重复元素的列表定义别名：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type UList a = {v:[a] | unique v }@-}
+</code></pre></div>
+<p>简单检查一下，合法与不合法的例子是否得到预期结果：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ isUnique    :: UList Int @-}
+isUnique = [1, 2, 3]           -- accepted by LH
+
+{-@ isNotUnique :: UList Int @-}
+isNotUnique = [1, 2, 3, 1]     -- rejected by LH
+</code></pre></div>
+<h3 id="过滤保持唯一性">过滤保持唯一性<a class="heading-anchor" href="#过滤保持唯一性" aria-label="链接到过滤保持唯一性">#</a></h3>
+<p><code>filter</code> 只保留输入中的部分元素。因此，输入没有重复项时，输出也没有重复项：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ filter   :: (a -&gt; Bool)
+             -&gt; xs:UList a
+             -&gt; {v:ListSub a xs | unique v}
+  @-}
+filter _ []   = []
+filter f (x:xs)
+  | f x       = x : xs&#39;
+  | otherwise = xs&#39;
+  where
+    xs&#39;       = filter f xs
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明</strong>：这里还依赖 <code>filter</code> 的具体递归实现不会复制元素。单独知道“输出元素集合是输入元素集合的子集”，并不足以保证没有重复项。</p>
+</blockquote>
+<h3 id="Filter">练习：允许任意输入的过滤函数<a class="heading-anchor" href="#Filter" aria-label="链接到练习：允许任意输入的过滤函数">#</a></h3>
+<p>要求 <code>filter</code> 只能接收无重复列表，似乎太严格了。请给下面的 <code>filter&#39;</code> 写一个更宽松的规格，同时让后面的两个用法都通过验证。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">filter&#39; _ []   = []
+filter&#39; f (x:xs)
+  | f x       = x : xs&#39;
+  | otherwise = xs&#39;
+  where
+    xs&#39;       = filter&#39; f xs
+
+{-@ test3 :: UList _ @-}
+test3     = filter&#39; (&gt; 2) [1,2,3,4]
+
+{-@ test4 :: [_] @-}
+test4     = filter&#39; (&gt; 3) [3,1,2,3]
+</code></pre></div>
+<h3 id="Reverse-unique">练习：反转保持唯一性 ★<a class="heading-anchor" href="#Reverse-unique" aria-label="链接到练习：反转保持唯一性 ★">#</a></h3>
+<p>反转列表不会改变其中的元素，也不会复制元素，所以无重复输入应该得到无重复输出。LiquidHaskell 为什么拒绝下面的实现？修改相关规格，让输出可以被证明是 <code>UList a</code>。</p>
+<p>完成后，应该能够去掉下面签名中的 <code>assume</code>，仍然让代码通过验证。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ assume reverse    :: xs:UList a -&gt; UList a    @-}
+reverse :: [a] -&gt; [a]
+reverse         = go []
+  where
+    {-@ go     :: acc:[a] -&gt; xs:[a] -&gt; [a] @-}
+    go acc []     = acc
+    go acc (x:xs) = go (x:acc) xs
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明</strong>：<code>assume</code> 表示把规格当作可信假设，不表示实现已经被证明。这个练习的目标正是补齐证明所需信息，最终移除这个假设。</p>
+</blockquote>
+<h3 id="去重">去重<a class="heading-anchor" href="#去重" aria-label="链接到去重">#</a></h3>
+<p><code>nub</code> 从任意输入建立一个无重复列表。它遍历输入，跳过已经出现在 <code>seen</code> 中的元素：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ nub              :: [a] -&gt; UList a @-}
+nub xs                = go [] xs
+  where
+    {-@ go :: UList a -&gt; xs:[a] -&gt; UList a / [len xs] @-}
+    go seen []        = seen
+    go seen (x:xs)
+      | x `isin` seen = go seen     xs
+      | otherwise     = go (x:seen) xs
+</code></pre></div>
+<p>关键的成员判断由 <code>isin</code> 完成：返回 <code>True</code> 当且仅当元素已经在列表中。</p>
+<blockquote>
+<p>原注：如果完成了前面的成员判断练习，对这个规格应该已经很熟悉了。</p>
+</blockquote>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- FIXME
+{-@ predicate In X Xs = Set_mem X (elts Xs) @-}
+
+{-@ isin :: x:_ -&gt; ys:_ -&gt; {v:Bool | v &lt;=&gt; In x ys }@-}
+isin x (y:ys)
+  | x == y    = True
+  | otherwise = x `isin` ys
+isin _ []     = False
+</code></pre></div>
+<h3 id="Append">练习：连接无重复列表 ★<a class="heading-anchor" href="#Append" aria-label="链接到练习：连接无重复列表 ★">#</a></h3>
+<p>为什么把两个 <code>UList</code> 连接起来，结果不一定仍然是 <code>UList</code>？修正下面的签名，让输出确实可以被证明没有重复元素。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ append       :: UList a -&gt; UList a -&gt; UList a @-}
+append []     ys = ys
+append (x:xs) ys = x : append xs ys
+</code></pre></div>
+<h3 id="Range">练习：整数区间 ★★<a class="heading-anchor" href="#Range" aria-label="链接到练习：整数区间 ★★">#</a></h3>
+<p><code>range i j</code> 返回从 <code>i</code> 开始、严格小于 <code>j</code> 的整数列表。LiquidHaskell 还不能根据当前信息证明它是 <code>UList</code>。修改代码，在保持计算结果不变的前提下，使给出的签名通过验证。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type Btwn I J = {v:_ | I &lt;= v &amp;&amp; v &lt; J} @-}
+
+{-@ range     :: i:Int -&gt; j:Int -&gt; UList (Btwn i j) @-}
+range i j
+  | i &lt; j     = i : range (i + 1) j
+  | otherwise = []
+</code></pre></div>
+<p><strong>提示：</strong> 可以先阅读后面<a href="Tutorial_10_Case_Study_Associative_Maps.html#lemmas">关于引理的章节</a>，再回头完成这道题。</p>
+<h2 id="没有重复元素的-zipper">没有重复元素的 zipper<a class="heading-anchor" href="#没有重复元素的-zipper" aria-label="链接到没有重复元素的 zipper">#</a></h2>
+<p><a href="http://en.wikipedia.org/wiki/Zipper_(data_structure)">Zipper</a> 是一种方便在数据结构中移动关注位置、并更新内容的表示方式。列表的 zipper 包含三部分：当前关注的元素 <code>focus</code>、它之前的元素列表 <code>left</code>，以及它之后的元素列表 <code>right</code>。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">data Zipper a = Zipper {
+    focus  :: a
+  , left   :: [a]
+  , right  :: [a]
+  }
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明</strong>：在这里，<code>left</code> 按与原列表相反的顺序保存，所以它的头部就是焦点左侧最近的元素。这样向左移动时，不必遍历整个左侧列表。</p>
+</blockquote>
+<p>xmonad 使用这样的 <a href="http://hackage.haskell.org/package/xmonad-0.11/docs/XMonad-StackSet.html">zipper</a> 保存受管理的窗口。一个关键要求是：整个 zipper 中不能出现重复值。</p>
+<h3 id="精化-zipper">精化 zipper<a class="heading-anchor" href="#精化-zipper" aria-label="链接到精化 zipper">#</a></h3>
+<p>为了表达这个要求，需要保证：<code>left</code> 和 <code>right</code> 各自没有重复项；它们互不相交；两边都不包含 <code>focus</code>。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ data Zipper a = Zipper {
+      focus :: a
+    , left  :: {v: UList a | not (In focus v)}
+    , right :: {v: UList a | not (In focus v) &amp;&amp; Disj v left }
+    } @-}
+
+{-@ predicate Disj X Y = Disjoint (elts X) (elts Y)        @-}
+</code></pre></div>
+<p>这个精化的构造器把合法性检查放在了创建入口：每个通过验证的 <code>Zipper</code> 都必须没有重复项。例如，可以直接从无重复列表构造一个合法 zipper：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ differentiate    :: UList a -&gt; Maybe (Zipper a) @-}
+differentiate []     = Nothing
+differentiate (x:xs) = Just $ Zipper x [] xs
+</code></pre></div>
+<h3 id="Deconstructing-Zippers">练习：把 zipper 还原成列表 ★<a class="heading-anchor" href="#Deconstructing-Zippers" aria-label="链接到练习：把 zipper 还原成列表 ★">#</a></h3>
+<p>反过来，把无重复 zipper 的元素取出来，应该得到无重复列表。强化前面 <code>reverse</code> 和 <code>append</code> 的类型，让下面 <code>integrate</code> 的签名通过验证。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ integrate            :: Zipper a -&gt; UList a @-}
+integrate (Zipper x l r) = reverse l `append` (x : r)
+</code></pre></div>
+<h3 id="移动焦点">移动焦点<a class="heading-anchor" href="#移动焦点" aria-label="链接到移动焦点">#</a></h3>
+<p>焦点可以向左或向右移动，同时保持唯一性。下面是向左移动的实现：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">focusLeft                      :: Zipper a -&gt; Zipper a
+focusLeft (Zipper t (l:ls) rs) = Zipper l ls (t:rs)
+focusLeft (Zipper t [] rs)     = Zipper x xs []
+  where
+    (x:xs)                     = reverse (t:rs)
+</code></pre></div>
+<p>如果需要向右移动，只要先交换左右两边，做一次向左移动，再交换回来：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">focusRight    :: Zipper a -&gt; Zipper a
+focusRight    = reverseZipper . focusLeft . reverseZipper
+
+reverseZipper :: Zipper a -&gt; Zipper a
+reverseZipper (Zipper t ls rs) = Zipper t rs ls
+</code></pre></div>
+<h3 id="过滤-zipper-中的元素">过滤 zipper 中的元素<a class="heading-anchor" href="#过滤-zipper-中的元素" aria-label="链接到过滤 zipper 中的元素">#</a></h3>
+<p>过滤时要考虑两种特殊情况：焦点本身可能被删除，甚至全部元素都可能被删除。后一种情况下无法形成含有焦点的 <code>Zipper</code>，因此结果使用 <code>Maybe</code>。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">filterZipper :: (a -&gt; Bool) -&gt; Zipper a -&gt; Maybe (Zipper a)
+filterZipper p (Zipper f ls rs)
+  = case filter p (f:rs) of
+      f&#39;:rs&#39; -&gt; Just $ Zipper f&#39; (filter p ls) rs&#39;
+      []     -&gt; case filter p ls of
+                  f&#39;:ls&#39; -&gt; Just $ Zipper f&#39; ls&#39; []
+                  []     -&gt; Nothing
+</code></pre></div>
+<p>结合精化类型与 SMT 求解器对集合的推理能力，就可以检查这些较复杂的 zipper 操作是否始终保持关键的唯一性不变量。</p>
+<h2 id="回顾">回顾<a class="heading-anchor" href="#回顾" aria-label="链接到回顾">#</a></h2>
+<p>这一章通过集合理论，推理数据结构中的实际 <strong>元素内容</strong>。具体做法包括：</p>
+<ul>
+<li>为 <code>Data.Set</code> 中的基础操作提供精化规格，把集合运算连接到逻辑层。</li>
+<li>定义 <code>elts</code> 等度量函数描述结构中的元素集合，再用 <code>unique</code> 描述没有重复项这样的高层性质。</li>
+<li>为实现编写并验证相应的功能性质，例如排序过程保持元素集合，zipper 的各种操作保持唯一性。</li>
+</ul>
+<p>接下来进入几个篇幅更长的案例，把前面学到的方法应用到具体的问题领域。</p>
+</article><nav class="chapter-pagination" aria-label="章节翻页"><a href="Tutorial_07_Measure_Int.html"><small>上一章</small><strong>07 数值度量</strong></a><a href="Tutorial_09_Case_Study_Lazy_Queues.html"><small>下一章</small><strong>09 惰性队列</strong></a></nav><footer class="page-footer"><p>原著 Ranjit Jhala 与贡献者 · 中文翻译与讲解</p><p><a href="about.html">来源与译本说明</a><span>·</span><a href="LICENSE">MIT License</a><span>·</span><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_01_Introduction.html">英文教程</a></p></footer></main><aside class="toc" aria-label="本页目录"><p>本页内容</p><nav><a class="toc-depth-2" href="#在规格中谈论集合">在规格中谈论集合</a><a class="toc-depth-3" href="#从-haskell-集合操作到逻辑集合操作">从 Haskell 集合操作到逻辑集合操作</a><a class="toc-depth-3" href="#求解器理解这些操作的含义">求解器理解这些操作的含义</a><a class="toc-depth-2" href="#quickcheck">证明 QuickCheck 风格的性质</a><a class="toc-depth-3" href="#给集合-api-精确的规格">给集合 API 精确的规格</a><a class="toc-depth-3" href="#把定理写成总为真的布尔函数">把定理写成总为真的布尔函数</a><a class="toc-depth-3" href="#Bounded-Addition">练习：有上界的加法</a><a class="toc-depth-3" href="#交集满足交换律">交集满足交换律</a><a class="toc-depth-3" href="#并集满足结合律">并集满足结合律</a><a class="toc-depth-3" href="#分配律">分配律</a><a class="toc-depth-3" href="#错误的-定理-应当被拒绝">错误的“定理”应当被拒绝</a><a class="toc-depth-3" href="#Set-Difference">练习：集合的差集</a><a class="toc-depth-2" href="#listelems">了解元素内容的列表 API</a><a class="toc-depth-3" href="#列表包含哪些元素">列表包含哪些元素</a><a class="toc-depth-3" href="#连接列表">连接列表</a><a class="toc-depth-3" href="#Reverse-elements">练习：反转时保留元素集合</a><a class="toc-depth-3" href="#Halve">练习：拆分列表 ★</a><a class="toc-depth-3" href="#Membership">练习：成员判断</a><a class="toc-depth-2" href="#排列与元素保持">排列与元素保持</a><a class="toc-depth-3" href="#插入排序">插入排序</a><a class="toc-depth-3" href="#Merge">练习：合并列表</a><a class="toc-depth-3" href="#Merge-Sort">练习：归并排序 ★★</a><a class="toc-depth-2" href="#唯一性-不允许重复元素">唯一性：不允许重复元素</a><a class="toc-depth-3" href="#描述没有重复元素">描述没有重复元素</a><a class="toc-depth-3" href="#过滤保持唯一性">过滤保持唯一性</a><a class="toc-depth-3" href="#Filter">练习：允许任意输入的过滤函数</a><a class="toc-depth-3" href="#Reverse-unique">练习：反转保持唯一性 ★</a><a class="toc-depth-3" href="#去重">去重</a><a class="toc-depth-3" href="#Append">练习：连接无重复列表 ★</a><a class="toc-depth-3" href="#Range">练习：整数区间 ★★</a><a class="toc-depth-2" href="#没有重复元素的-zipper">没有重复元素的 zipper</a><a class="toc-depth-3" href="#精化-zipper">精化 zipper</a><a class="toc-depth-3" href="#Deconstructing-Zippers">练习：把 zipper 还原成列表 ★</a><a class="toc-depth-3" href="#移动焦点">移动焦点</a><a class="toc-depth-3" href="#过滤-zipper-中的元素">过滤 zipper 中的元素</a><a class="toc-depth-2" href="#回顾">回顾</a></nav><a class="back-top" href="#main-content">回到顶部 ↑</a></aside></div>
+  <button class="nav-backdrop" id="nav-backdrop" aria-label="关闭章节导航" tabindex="-1" hidden></button>
+  <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><h2 id="search-title">搜索教程</h2><button class="dialog-close" id="search-close" aria-label="关闭搜索">Esc</button></div><label for="search-input" class="sr-only">输入中文、英文或代码名称</label><div class="search-input-wrap"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><input id="search-input" type="search" placeholder="试试「不变量」、measure、ByteString…" autocomplete="off"></div><p class="search-status" id="search-status" role="status">搜索全部章节与术语；多个关键词用空格分隔。</p><ol id="search-results" class="search-results"></ol></dialog>
+  <div class="sr-only" id="live-status" aria-live="polite"></div>
+</body>
+</html>

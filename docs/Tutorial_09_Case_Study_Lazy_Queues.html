@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="用两个列表实现队列，验证长度约束与旋转操作的前提。">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>9. 惰性队列 · LiquidHaskell 中文教程</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>try{const t=localStorage.getItem('lh-cn-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}</script>
+  <script src="search-index.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-page="Tutorial_09_Case_Study_Lazy_Queues">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar"><div class="topbar-inner">
+    <button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开章节导航" aria-controls="chapter-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">λ</span><span>LiquidHaskell <span class="brand-language">中文教程</span></span></a>
+    <div class="top-actions"><button class="search-button" data-open-search aria-label="搜索教程"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><span>搜索教程</span><kbd>Ctrl K</kbd></button><button class="icon-button" id="theme-toggle" aria-label="切换明暗主题" title="切换明暗主题"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.1A8.7 8.7 0 0 1 10.9 3.5 8.7 8.7 0 1 0 20.5 13.1Z"/></svg></button><a class="repo-link" href="https://github.com/longlong921/liquidhaskell-cn">GitHub <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+  </div></header>
+  <div class="layout "><aside class="sidebar" id="chapter-navigation" aria-label="教程导航">
+    <a class="sidebar-home " href="index.html"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/></svg> 阅读首页</a>
+    <div class="nav-group"><p class="nav-label">I · 精化类型</p><ol start="1"><li><a href="Tutorial_01_Introduction.html" ><span class="nav-number">01</span><span>引言</span></a></li><li><a href="Tutorial_02_Logic.html" ><span class="nav-number">02</span><span>逻辑与 SMT</span></a></li><li><a href="Tutorial_03_Basic.html" ><span class="nav-number">03</span><span>精化类型</span></a></li><li><a href="Tutorial_04_Polymorphism.html" ><span class="nav-number">04</span><span>多态</span></a></li><li><a href="Tutorial_05_Datatypes.html" ><span class="nav-number">05</span><span>精化数据类型</span></a></li></ol></div><div class="nav-group"><p class="nav-label">II · 度量函数</p><ol start="6"><li><a href="Tutorial_06_Measure_Bool.html" ><span class="nav-number">06</span><span>布尔度量</span></a></li><li><a href="Tutorial_07_Measure_Int.html" ><span class="nav-number">07</span><span>数值度量</span></a></li><li><a href="Tutorial_08_Measure_Set.html" ><span class="nav-number">08</span><span>集合度量</span></a></li></ol></div><div class="nav-group"><p class="nav-label">III · 完整案例</p><ol start="9"><li><a href="Tutorial_09_Case_Study_Lazy_Queues.html" aria-current="page" class="active"><span class="nav-number">09</span><span>惰性队列</span></a></li><li><a href="Tutorial_10_Case_Study_Associative_Maps.html" ><span class="nav-number">10</span><span>键值映射</span></a></li><li><a href="Tutorial_11_Case_Study_Pointers.html" ><span class="nav-number">11</span><span>指针与字节</span></a></li><li><a href="Tutorial_12_Case_Study_AVL.html" ><span class="nav-number">12</span><span>AVL 树</span></a></li></ol></div>
+    <div class="nav-extras"><a href="guide.html" >阅读与练习指南</a><a href="glossary.html" >中英术语表</a><a href="about.html" >译本说明与来源</a></div>
+    <div class="sidebar-note"><span class="status-dot"></span>12 章完整译文<br><small>原文示例 · 练习 · 译者说明</small></div>
+  </aside><main id="main-content" tabindex="-1"><div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div><header class="chapter-header"><p class="eyebrow">第 09 章 <span>/</span> 完整案例</p><h1>惰性队列</h1><p class="chapter-subtitle">案例：Okasaki 的队列</p><div class="chapter-links"><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_09_Case_Study_Lazy_Queues.html">对照英文原文 ↗</a><a href="examples/Tutorial_09_Case_Study_Lazy_Queues.lhs" download>下载原始示例 ↓</a></div></header><div class="reading-note"><strong>阅读提示</strong> 代码与练习保留原貌；标为「译者说明」的内容是补充讲解。运行前请阅读<a href="guide.html#environment">环境说明</a>。</div><article class="prose"><span class="chapter-anchor" id="lazyqueue"></span>
+<p>先来看一个恰到好处的案例：它足够简单，不需要展示一大堆代码，又足够丰富，能体现“类型里的信息可以依赖具体值”有什么用。这个案例就是 Chris Okasaki 的<a href="http://www.westpoint.edu/eecs/SiteAssets/SitePages/Faculty%20Publication%20Documents/Okasaki/jfp95queue.pdf">惰性队列</a>。这种数据结构依靠一个关键不变量，实现高效的插入和删除。下面用 LiquidHaskell 来保证这个不变量。</p>
+<blockquote>
+<p><strong>译者说明：</strong> 本章验证的是队列的结构、长度关系以及操作的输入输出约束。后文关于摊销复杂度和最坏情况复杂度的结论来自数据结构的算法分析，不能仅凭这些精化类型就宣称“LiquidHaskell 已证明运行时间”。上游完整源码还关闭了终止性检查；本章代码中标为练习的规格需要读者补全。</p>
+</blockquote>
+<h2 id="队列">队列<a class="heading-anchor" href="#队列" aria-label="链接到队列">#</a></h2>
+<p><a href="http://en.wikipedia.org/wiki/Queue_%28abstract_data_type%29">队列</a>支持插入 <code>insert</code> 和移除 <code>remove</code>，并要求元素的移除顺序与插入顺序一致，也就是 <strong>先进先出</strong>。</p>
+<p><a id="fig:queue"></a></p>
+<p><img src="img/queue.png" alt="队列：元素从队尾插入，从队首移除，移除顺序与插入顺序一致。"></p>
+<p>要高效实现队列，我们需要快速访问队首和队尾，因为移除发生在队首，插入发生在队尾。如果允许显式指针和原地修改，做法很直接：使用链表，分别保存头指针和尾指针。不过，不采用这些底层手段，能否仍然高效实现？</p>
+<p>Chris Okasaki 的方法很巧妙：用 <strong>两个列表</strong> 表示队列，分别叫作 <code>front</code> 和 <code>back</code>。</p>
+<ul>
+<li>插入元素时，把它用 <code>cons</code> 加到 <code>back</code> 的头部。</li>
+<li>移除元素时，从 <code>front</code> 的头部取出一个元素。</li>
+</ul>
+<p><a id="fig:queue-pair"></a></p>
+<p><img src="img/queue-lists.png" alt="用 front 与 back 两个列表表示队列的前后两部分。"></p>
+<p>问题在于，我们时不时需要把后面的元素转移到前面。例如，可以在同时满足下面两个条件时，把 <code>back</code> 的元素搬到 <code>front</code>：</p>
+<ol>
+<li>正在调用 <code>remove</code>。</li>
+<li><code>front</code> 已经为空。</li>
+</ol>
+<p><a id="fig:queue-transfer"></a></p>
+<p><img src="img/queue-rotate.png" alt="将 back 中的元素转移到 front。"></p>
+<p>Okasaki 的第一个观察是：每个元素只会从后面搬到前面 <strong>一次</strong>。所以，把总成本平均到整个操作序列上，<code>insert</code> 和 <code>remove</code> 的 <strong>摊销时间</strong> 可以是 <code>O(1)</code>。这几乎很理想，但仍有少数不走运的 <code>remove</code> 要一次承担搬运成本：当 <code>front</code> 为空时，单次操作的延迟可能达到 <code>O(n)</code>，这里 <code>n</code> 是累计操作次数。</p>
+<p>第二个观察解决了这个问题：维护一个简单的 <strong>平衡不变量</strong> 即可：</p>
+<p><strong><code>front</code> 的长度 ≥ <code>back</code> 的长度。</strong></p>
+<p>如果列表是惰性的，即只有真正需要头部元素时才构造相应部分，按照这里讨论的算法分析，单次 <code>remove</code> 的最坏时间就能限制在 <code>O(log n)</code>，不必由某一次操作承担全部搬运成本。</p>
+<p>下面实现这个队列，并让 LiquidHaskell 检查关键不变量。我们需要三样东西：</p>
+<ol>
+<li>一个列表类型，以及跟踪列表 <code>size</code> 的方式。</li>
+<li>一个把平衡不变量写进类型的 <code>Queue</code>。</li>
+<li><code>insert</code>、<code>remove</code> 和元素转移操作的实现。</li>
+</ol>
+<h2 id="带长度的列表">带长度的列表<a class="heading-anchor" href="#带长度的列表" aria-label="链接到带长度的列表">#</a></h2>
+<p>第一步很简单，先定义类型：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">data SList a = SL { size :: Int, elems :: [a] }
+</code></pre></div>
+<p>这里专门保存 <code>size</code> 字段。否则，每次计算长度都要遍历列表，线性时间的成本会破坏 Okasaki 的复杂度分析。原论文也给出了不需要缓存长度的变体，不过这里先不讨论。</p>
+<p>怎样确保 <code>size</code> 保存的是 <code>elems</code> 的 <strong>真实长度</strong>，而不是随便填进去的数字？先写一个度量真实长度的函数：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ measure realSize @-}
+realSize      :: [a] -&gt; Int
+realSize []     = 0
+realSize (_:xs) = 1 + realSize xs
+</code></pre></div>
+<p>然后给 <code>SList</code> 写一个精化数据类型，让 <code>size</code> 字段必须等于列表的真实长度：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ data SList a = SL {
+      size  :: Nat
+    , elems :: {v:[a] | realSize v = size}
+    }
+@-}
+</code></pre></div>
+<p>用两个小例子检查一下：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">okList  = SL 1 [&quot;cat&quot;]    -- accepted
+
+badList = SL 1 []         -- rejected
+</code></pre></div>
+<p>再定义一个别名，表示长度恰好为 <code>N</code> 的列表：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type SListN a N = {v:SList a | size v = N} @-}
+</code></pre></div>
+<p>有了这些，就可以定义 <code>SList</code> 的基本 API。构造列表需要 <code>nil</code> 和 <code>cons</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ nil :: SListN a 0 @-}
+nil = SL 0 []
+
+{-@ cons :: a -&gt; xs:SList a -&gt; SListN a {size xs + 1} @-}
+cons x (SL n xs) = SL (n+1) (x:xs)
+</code></pre></div>
+<h3 id="练习-拆开列表">练习：拆开列表<a class="heading-anchor" href="#练习-拆开列表" aria-label="链接到练习：拆开列表">#</a></h3>
+<p>下面的 <code>hd</code> 和 <code>tl</code> 分别取列表头部和剩余部分。修改规格或实现，使定义能够通过检查。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ tl           :: xs:SList a -&gt; SListN a {size xs - 1}  @-}
+tl (SL n (_:xs)) = SL (n-1) xs
+tl _             = die &quot;empty SList&quot;
+
+{-@ hd           :: xs:SList a -&gt; a @-}
+hd (SL _ (x:_))  = x
+hd _             = die &quot;empty SList&quot;
+</code></pre></div>
+<p><strong>提示：</strong> 完成之后，<code>okHd</code> 应通过检查，<code>badHd</code> 应被拒绝。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ okList :: SListN String 1 @-}
+
+okHd  = hd okList       -- accepted
+
+badHd = hd (tl okList)  -- rejected
+</code></pre></div>
+<h2 id="队列类型">队列类型<a class="heading-anchor" href="#队列类型" aria-label="链接到队列类型">#</a></h2>
+<p><code>Queue</code> 可以直接表示为 <code>front</code> 和 <code>back</code> 两个列表，并要求后者长度不超过前者：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ data Queue a = Q {
+      front :: SList a
+    , back  :: SListLE a (size front)
+    }
+@-}
+data Queue a = Q
+  { front :: SList a
+  , back  :: SList a
+  }
+</code></pre></div>
+<p>别名 <code>SListLE a N</code> 表示元素个数至多为 <code>N</code> 的列表：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type SListLE a N = {v:SList a | size v &lt;= N} @-}
+</code></pre></div>
+<p>简单检查一下：在这些约束下，我们无法构造违反平衡不变量的队列。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">okQ  = Q okList nil  -- accepted, |front| &gt; |back|
+
+badQ = Q nil okList  -- rejected, |front| &lt; |back|
+</code></pre></div>
+<h2 id="队列操作">队列操作<a class="heading-anchor" href="#队列操作" aria-label="链接到队列操作">#</a></h2>
+<p>接下来只需定义 <code>Queue</code> 的 API。下面的代码与 Okasaki 的版本基本一致；原作者使用 <code>front</code> 和 <code>back</code>，代替论文里的 <code>left</code> 和 <code>right</code>。</p>
+<p><strong>空队列</strong> 的前后两个列表都为空：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">emp = Q nil nil
+</code></pre></div>
+<p><strong>移除元素</strong> 时，通过 <code>hd</code> 取出 <code>front</code> 的头部，再通过 <code>tl</code> 得到剩余部分。注意，<code>remove</code> 应当只用于非空队列；结合前面“前部长度不小于后部长度”的不变量，这就能保证调用 <code>hd</code>、<code>tl</code> 是安全的。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">remove (Q f b)   = (hd f, makeq (tl f) b)
+</code></pre></div>
+<h3 id="练习-为什么不用模式匹配">练习：为什么不用模式匹配？<a class="heading-anchor" href="#练习-为什么不用模式匹配" aria-label="链接到练习：为什么不用模式匹配？">#</a></h3>
+<p>为什么这里没有直接用模式匹配拆开列表，而是像 Okasaki 一样显式调用 <code>hd</code> 和 <code>tl</code>？请解释原因。</p>
+<h3 id="练习-队列长度">练习：队列长度<a class="heading-anchor" href="#练习-队列长度" aria-label="链接到练习：队列长度">#</a></h3>
+<p>如果你完成了前面的“拆开列表”练习，就会发现 <code>remove</code> 目前还会报类型错误：当 <code>f</code> 为空时，调用 <code>hd</code> 和 <code>tl</code> 可能失败。</p>
+<ol>
+<li>写一个度量函数，描述队列的长度。</li>
+<li>用它补全下面的 <code>QueueN</code> 定义。</li>
+<li>给 <code>remove</code> 写一个类型，让检查器能够证明内部的 <code>hd</code>、<code>tl</code> 调用是安全的。</li>
+</ol>
+<p><strong>提示：</strong> 完成之后，<code>okRemove</code> 应通过，<code>badRemove</code> 应被拒绝，而 <code>emp</code> 应具有下面给出的类型。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- | Queues of size `N`
+{-@ type QueueN a N = {v:Queue a | true} @-}
+
+okRemove  = remove example2Q   -- accept
+badRemove = remove example0Q   -- reject
+
+{-@ emp :: QueueN _ 0 @-}
+
+{-@ example2Q :: QueueN _ 2 @-}
+example2Q = Q (1 `cons` (2 `cons` nil)) nil
+
+{-@ example0Q :: QueueN _ 0 @-}
+example0Q = Q nil nil
+</code></pre></div>
+<p><strong>插入元素</strong> 时，把新元素 <code>cons</code> 到 <code>back</code>，然后调用智能构造函数 <code>makeq</code>，让结果重新满足平衡不变量：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">insert e (Q f b) = makeq f (e `cons` b)
+</code></pre></div>
+<h3 id="练习-插入">练习：插入<a class="heading-anchor" href="#练习-插入" aria-label="链接到练习：插入">#</a></h3>
+<p>给 <code>insert</code> 写一个类型，使 LiquidHaskell 接受 <code>replicate</code> 和 <code>okReplicate</code>，同时拒绝 <code>badReplicate</code>。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ replicate :: n:Nat -&gt; a -&gt; QueueN a n @-}
+replicate 0 _ = emp
+replicate n x = insert x (replicate (n-1) x)
+
+{-@ okReplicate :: QueueN _ 3 @-}
+okReplicate = replicate 3 &quot;Yeah!&quot;  -- accept
+
+{-@ badReplicate :: QueueN _ 3 @-}
+badReplicate = replicate 1 &quot;No!&quot;   -- reject
+</code></pre></div>
+<p><strong>维护不变量</strong> 的主要工作由 <code>makeq</code> 完成。它接收前部列表 <code>f</code> 和后部列表 <code>b</code>：如果已经平衡，直接构造 <code>Queue</code>；否则调用接下来介绍的 <code>rot</code>，将后部元素转移到前部。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ makeq :: f:SList a -&gt; b:SList a -&gt; QueueN a {size f + size b} @-}
+makeq f b
+  | size b &lt;= size f = Q f b
+  | otherwise        = Q (rot f b nil) nil
+</code></pre></div>
+<h3 id="练习-旋转">练习：旋转（★★）<a class="heading-anchor" href="#练习-旋转" aria-label="链接到练习：旋转（★★）">#</a></h3>
+<p><code>rot</code> 只应在 <code>back</code> 比 <code>front</code> <strong>恰好多一个元素</strong> 时调用，因为我们的操作不会让差距继续扩大。它的计算顺序经过安排，整个计算完成前，列表头部就能较快地产生；结合惰性求值，这构成了最坏情况效率保证的基础。</p>
+<p>为 <code>rot</code> 写一个类型，使它通过检查，并使 <code>makeq</code> 的类型也得到验证。</p>
+<p><strong>提示：</strong> 你可能还需要修改 <code>makeq</code> 的前置条件，写清楚 <code>f</code> 与 <code>b</code> 的长度关系。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">rot f b acc
+  | size f == 0 = hd b `cons` acc
+  | otherwise   = hd f `cons` rot (tl f) (tl b) (hd b `cons` acc)
+</code></pre></div>
+<h3 id="练习-转移元素">练习：转移元素<a class="heading-anchor" href="#练习-转移元素" aria-label="链接到练习：转移元素">#</a></h3>
+<p>给 <code>take</code> 写类型签名：它从输入队列 <code>q</code> 中取出 <code>n</code> 个元素，放进一个新的输出队列，同时返回剩余队列。完成后，<code>okTake</code> 应通过，<code>badTake</code> 应被拒绝。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">take           :: Int -&gt; Queue a -&gt; (Queue a, Queue a)
+take 0 q       = (emp          , q)
+take n q       = (insert x out , q&#39;&#39;)
+  where
+    (x  , q&#39;)  = remove q
+    (out, q&#39;&#39;) = take (n-1) q&#39;
+
+{-@ okTake :: (QueueN _ 2, QueueN _ 1) @-}
+okTake   = take 2 exampleQ  -- accept
+
+badTake  = take 10 exampleQ -- reject
+
+exampleQ = insert &quot;nal&quot; $ insert &quot;bob&quot; $ insert &quot;alice&quot; $ emp
+</code></pre></div>
+<h2 id="回顾">回顾<a class="heading-anchor" href="#回顾" aria-label="链接到回顾">#</a></h2>
+<p>我们已经用 LiquidHaskell 表达并检查了 Okasaki 惰性队列的重要不变量。这个案例值得留意的地方有三个：</p>
+<ol>
+<li>精化类型能够表达对算法效率至关重要的不变量。</li>
+<li>程序根据保存的 <code>size</code> 作出判断，从而持续维护这些不变量。</li>
+<li>实现仍然很短，能够把数据结构本身的思路清楚地呈现出来。</li>
+</ol>
+</article><nav class="chapter-pagination" aria-label="章节翻页"><a href="Tutorial_08_Measure_Set.html"><small>上一章</small><strong>08 集合度量</strong></a><a href="Tutorial_10_Case_Study_Associative_Maps.html"><small>下一章</small><strong>10 键值映射</strong></a></nav><footer class="page-footer"><p>原著 Ranjit Jhala 与贡献者 · 中文翻译与讲解</p><p><a href="about.html">来源与译本说明</a><span>·</span><a href="LICENSE">MIT License</a><span>·</span><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_01_Introduction.html">英文教程</a></p></footer></main><aside class="toc" aria-label="本页目录"><p>本页内容</p><nav><a class="toc-depth-2" href="#队列">队列</a><a class="toc-depth-2" href="#带长度的列表">带长度的列表</a><a class="toc-depth-3" href="#练习-拆开列表">练习：拆开列表</a><a class="toc-depth-2" href="#队列类型">队列类型</a><a class="toc-depth-2" href="#队列操作">队列操作</a><a class="toc-depth-3" href="#练习-为什么不用模式匹配">练习：为什么不用模式匹配？</a><a class="toc-depth-3" href="#练习-队列长度">练习：队列长度</a><a class="toc-depth-3" href="#练习-插入">练习：插入</a><a class="toc-depth-3" href="#练习-旋转">练习：旋转（★★）</a><a class="toc-depth-3" href="#练习-转移元素">练习：转移元素</a><a class="toc-depth-2" href="#回顾">回顾</a></nav><a class="back-top" href="#main-content">回到顶部 ↑</a></aside></div>
+  <button class="nav-backdrop" id="nav-backdrop" aria-label="关闭章节导航" tabindex="-1" hidden></button>
+  <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><h2 id="search-title">搜索教程</h2><button class="dialog-close" id="search-close" aria-label="关闭搜索">Esc</button></div><label for="search-input" class="sr-only">输入中文、英文或代码名称</label><div class="search-input-wrap"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><input id="search-input" type="search" placeholder="试试「不变量」、measure、ByteString…" autocomplete="off"></div><p class="search-status" id="search-status" role="status">搜索全部章节与术语；多个关键词用空格分隔。</p><ol id="search-results" class="search-results"></ol></dialog>
+  <div class="sr-only" id="live-status" aria-live="polite"></div>
+</body>
+</html>

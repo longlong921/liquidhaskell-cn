@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="让稀疏向量、有序列表和搜索树在构造时就满足约束。">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>5. 精化数据类型 · LiquidHaskell 中文教程</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>try{const t=localStorage.getItem('lh-cn-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}</script>
+  <script src="search-index.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-page="Tutorial_05_Datatypes">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar"><div class="topbar-inner">
+    <button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开章节导航" aria-controls="chapter-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">λ</span><span>LiquidHaskell <span class="brand-language">中文教程</span></span></a>
+    <div class="top-actions"><button class="search-button" data-open-search aria-label="搜索教程"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><span>搜索教程</span><kbd>Ctrl K</kbd></button><button class="icon-button" id="theme-toggle" aria-label="切换明暗主题" title="切换明暗主题"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.1A8.7 8.7 0 0 1 10.9 3.5 8.7 8.7 0 1 0 20.5 13.1Z"/></svg></button><a class="repo-link" href="https://github.com/longlong921/liquidhaskell-cn">GitHub <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+  </div></header>
+  <div class="layout "><aside class="sidebar" id="chapter-navigation" aria-label="教程导航">
+    <a class="sidebar-home " href="index.html"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/></svg> 阅读首页</a>
+    <div class="nav-group"><p class="nav-label">I · 精化类型</p><ol start="1"><li><a href="Tutorial_01_Introduction.html" ><span class="nav-number">01</span><span>引言</span></a></li><li><a href="Tutorial_02_Logic.html" ><span class="nav-number">02</span><span>逻辑与 SMT</span></a></li><li><a href="Tutorial_03_Basic.html" ><span class="nav-number">03</span><span>精化类型</span></a></li><li><a href="Tutorial_04_Polymorphism.html" ><span class="nav-number">04</span><span>多态</span></a></li><li><a href="Tutorial_05_Datatypes.html" aria-current="page" class="active"><span class="nav-number">05</span><span>精化数据类型</span></a></li></ol></div><div class="nav-group"><p class="nav-label">II · 度量函数</p><ol start="6"><li><a href="Tutorial_06_Measure_Bool.html" ><span class="nav-number">06</span><span>布尔度量</span></a></li><li><a href="Tutorial_07_Measure_Int.html" ><span class="nav-number">07</span><span>数值度量</span></a></li><li><a href="Tutorial_08_Measure_Set.html" ><span class="nav-number">08</span><span>集合度量</span></a></li></ol></div><div class="nav-group"><p class="nav-label">III · 完整案例</p><ol start="9"><li><a href="Tutorial_09_Case_Study_Lazy_Queues.html" ><span class="nav-number">09</span><span>惰性队列</span></a></li><li><a href="Tutorial_10_Case_Study_Associative_Maps.html" ><span class="nav-number">10</span><span>键值映射</span></a></li><li><a href="Tutorial_11_Case_Study_Pointers.html" ><span class="nav-number">11</span><span>指针与字节</span></a></li><li><a href="Tutorial_12_Case_Study_AVL.html" ><span class="nav-number">12</span><span>AVL 树</span></a></li></ol></div>
+    <div class="nav-extras"><a href="guide.html" >阅读与练习指南</a><a href="glossary.html" >中英术语表</a><a href="about.html" >译本说明与来源</a></div>
+    <div class="sidebar-note"><span class="status-dot"></span>12 章完整译文<br><small>原文示例 · 练习 · 译者说明</small></div>
+  </aside><main id="main-content" tabindex="-1"><div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div><header class="chapter-header"><p class="eyebrow">第 05 章 <span>/</span> 精化类型</p><h1>精化数据类型</h1><p class="chapter-subtitle">把不变量放进数据结构</p><div class="chapter-links"><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_05_Datatypes.html">对照英文原文 ↗</a><a href="examples/Tutorial_05_Datatypes.lhs" download>下载原始示例 ↓</a></div></header><div class="reading-note"><strong>阅读提示</strong> 代码与练习保留原貌；标为「译者说明」的内容是补充讲解。运行前请阅读<a href="guide.html#environment">环境说明</a>。</div><article class="prose"><span class="chapter-anchor" id="refineddatatypes"></span>
+<p>前面我们为 <strong>函数</strong> 添加精化类型，用它说明输入必须满足的前置条件，以及输出应该满足的后置条件。实际编程时，我们也经常希望某种 <strong>数据类型本身</strong> 始终满足特定条件。这时，可以直接为 <code>data</code> 定义添加精化：把约束放到构造数据的入口，让不合法的值无法通过检查。</p>
+<blockquote>
+<p><strong>译者说明</strong>：这里的“无法构造”指在 LiquidHaskell 所检查的代码与可信假设范围内，构造操作必须满足规格。来自文件、网络或其他未验证代码的数据，仍然需要在边界处校验。</p>
+</blockquote>
+<h2 id="autosmart">再看稀疏向量<a class="heading-anchor" href="#autosmart" aria-label="链接到再看稀疏向量">#</a></h2>
+<p>第一个例子仍然是<a href="Tutorial_04_Polymorphism.html#sparsetype">上一章的稀疏向量</a>。之前的类型别名 <code>SparseN</code> 能表达要求，但使用起来不太方便：从表示本身无法直接取得向量的 <strong>维度</strong>。现在定义一种把维度也存下来的数据类型：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">data Sparse a = SP { spDim   :: Int
+                   , spElems :: [(Int, a)] }
+</code></pre></div>
+<p>因此，一个稀疏向量由两部分组成：维度，以及一组“下标—值”二元组。没有出现在列表里的下标，默认对应 <code>0</code>，或元素类型 <code>a</code> 中相应的零值。</p>
+<p>一个 <strong>合法</strong> 的 <code>Sparse</code> 必须满足两个关键条件：<code>spDim</code> 中的维度非负；<code>spElems</code> 中每个下标都在合法范围内，也就是大于等于 <code>0</code>、严格小于维度。仅靠这里的普通 Haskell 类型，不容易直接保证“不合法的向量根本无法表示”。</p>
+<blockquote>
+<p>原注：常见做法是隐藏数据构造器，使用抽象类型和<a href="https://www.haskell.org/haskellwiki/Smart_constructors">智能构造器</a>。不过，智能构造器是否真的建立了所需不变量，通常仍然依靠实现者保证。</p>
+</blockquote>
+<h3 id="把数据不变量写进定义">把数据不变量写进定义<a class="heading-anchor" href="#把数据不变量写进定义" aria-label="链接到把数据不变量写进定义">#</a></h3>
+<p>LiquidHaskell 允许我们直接给数据定义添加精化：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ data Sparse a = SP { spDim   :: Nat
+                       , spElems :: [(Btwn 0 spDim, a)]} @-}
+</code></pre></div>
+<p>这里仍使用之前的类型别名：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type Nat        = {v:Int | 0 &lt;= v}            @-}
+{-@ type Btwn Lo Hi = {v:Int | Lo &lt;= v &amp;&amp; v &lt; Hi} @-}
+</code></pre></div>
+<h3 id="数据构造器也有精化类型">数据构造器也有精化类型<a class="heading-anchor" href="#数据构造器也有精化类型" aria-label="链接到数据构造器也有精化类型">#</a></h3>
+<p>在内部，上面的定义会转成构造器 <code>SP</code> 的精化类型：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- Generated Internal representation
+data Sparse a where
+  SP :: spDim:Nat
+     -&gt; spElems:[(Btwn 0 spDim, a)]
+     -&gt; Sparse a
+</code></pre></div>
+<p>也就是说，给 <code>SP</code> 的参数规定好精化类型，就相当于自动把它变成了一个 <strong>智能构造器</strong>。每次创建 <code>Sparse</code> 时，都必须证明这些条件成立。因此，下面这个值可以通过检查：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">okSP :: Sparse String
+okSP = SP 5 [ (0, &quot;cat&quot;)
+            , (3, &quot;dog&quot;) ]
+</code></pre></div>
+<p>下面这个值则会被拒绝，因为维度为 <code>5</code> 时，下标 <code>6</code> 已经越界：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">badSP :: Sparse String
+badSP = SP 5 [ (0, &quot;cat&quot;)
+             , (6, &quot;dog&quot;) ]
+</code></pre></div>
+<h3 id="把字段当作度量函数">把字段当作度量函数<a class="heading-anchor" href="#把字段当作度量函数" aria-label="链接到把字段当作度量函数">#</a></h3>
+<p>我们经常需要表示“维度恰好为 <code>N</code> 的稀疏向量”。和之前的 <code>vlen</code> 一样，字段名 <code>spDim</code> 也可以作为 <strong>度量函数</strong>，在精化谓词里使用：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type SparseN a N = {v:Sparse a | spDim v == N} @-}
+</code></pre></div>
+<blockquote>
+<p>原注：在精化的 <code>data</code> 定义 <strong>内部</strong>，<code>spDim</code> 指当前字段的值；在定义 <strong>外部</strong>，它指读取该字段的选择函数，或者相应的逻辑度量函数。因此，<code>spDim v</code> 表示“向量 <code>v</code> 的维度”。</p>
+</blockquote>
+<h3 id="稀疏向量的点积">稀疏向量的点积<a class="heading-anchor" href="#稀疏向量的点积" aria-label="链接到稀疏向量的点积">#</a></h3>
+<p>下面计算普通向量与稀疏向量的点积：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ dotProd :: x:Vector Int -&gt; SparseN Int (vlen x) -&gt; Int @-}
+dotProd x (SP _ y) = go 0 y
+  where
+    go sum ((i, v) : y&#39;) = go (sum + (x ! i) * v) y&#39;
+    go sum []            = sum
+</code></pre></div>
+<p>规格说明两个向量的维度相同。结合 <code>Sparse</code> 的数据不变量，LiquidHaskell 能推出：列表 <code>y</code> 里每个 <code>(i, v)</code> 的 <code>i</code> 都落在向量 <code>x</code> 的边界内。因此，<code>x ! i</code> 的访问是安全的。</p>
+<h3 id="用折叠实现点积">用折叠实现点积<a class="heading-anchor" href="#用折叠实现点积" aria-label="链接到用折叠实现点积">#</a></h3>
+<p>之前使用 <code>fold</code> 的写法，也可以迁移到这个新表示上：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ dotProd&#39; :: x:Vector Int -&gt; SparseN Int (vlen x) -&gt; Int @-}
+dotProd&#39; x (SP _ y) = foldl&#39; body 0 y
+  where
+    body sum (i, v) = sum + (x ! i)  * v
+</code></pre></div>
+<p>检查这段代码时，LiquidHaskell 会为 <code>foldl&#39;</code> 的类型参数<a href="Tutorial_04_Polymorphism.html#sparsetype">自动实例化精化条件</a>。这样既省去了重复标注，也让我们继续使用熟悉的多态、高阶组合函数。</p>
+<h3 id="Sanitization">练习：校验外部输入 ★<a class="heading-anchor" href="#Sanitization" aria-label="链接到练习：校验外部输入 ★">#</a></h3>
+<p>对于程序 <strong>内部</strong> 计算出来的数据，不变量可以沿着类型和函数调用传播。但从“现实世界”进入程序的数据，不能凭空获得这些保证。必须先写一个校验函数，检查条件成立之后，才能构造 <code>Sparse</code>。</p>
+<p>请为 <code>fromList</code> 补上规格和实现，使下面的代码通过检查。</p>
+<p><strong>提示：</strong> 检查 <code>elts</code> 中 <strong>所有</strong> 下标是否小于 <code>dim</code>。一种简单做法是先生成 <code>Maybe [(Int, a)]</code>：全部合法时返回原来的二元组列表 <code>Just ...</code>，否则返回 <code>Nothing</code>。</p>
+<blockquote>
+<p><strong>译者说明</strong>：完整的不变量还要求 <code>dim &gt;= 0</code>，并要求每个下标 <code>i &gt;= 0</code>。原提示强调的是上界，完成校验时不要漏掉这些条件。另外，<code>fromJust</code> 自己也需要非空前提；本练习应让“成功构造”的条件足够明确。</p>
+</blockquote>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">fromList          :: Int   -&gt; [(Int, a)] -&gt; Maybe (Sparse a)
+fromList dim elts = undefined
+
+{-@ test1 :: SparseN String 3 @-}
+test1     = fromJust $ fromList 3 [(0, &quot;cat&quot;), (2, &quot;mouse&quot;)]
+</code></pre></div>
+<h3 id="Addition">练习：稀疏向量相加<a class="heading-anchor" href="#Addition" aria-label="链接到练习：稀疏向量相加">#</a></h3>
+<p>为 <code>plus</code> 编写规格和实现：它接收两个 <strong>维度相同</strong> 的稀疏向量，结果仍然具有相同维度。完成后，下面的代码应该通过类型检查。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">plus     :: (Num a) =&gt; Sparse a -&gt; Sparse a -&gt; Sparse a
+plus x y = undefined
+
+{-@ test2 :: SparseN Int 3 @-}
+test2    = plus vec1 vec2
+  where
+    vec1 = SP 3 [(0, 12), (2, 9)]
+    vec2 = SP 3 [(0, 8),  (1, 100)]
+</code></pre></div>
+<h2 id="orderedlists">有序列表<a class="heading-anchor" href="#orderedlists" aria-label="链接到有序列表">#</a></h2>
+<p>第二个例子换一个问题：如何表示一个 <strong>已经排好序</strong> 的序列？先定义一种与普通列表很相似的数据结构：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">data IncList a =
+    Emp
+  | (:&lt;) { hd :: a, tl :: IncList a }
+
+infixr 9 :&lt;
+</code></pre></div>
+<p>普通 Haskell 类型并没有说明元素是否有序。我们可以给尾部 <code>tl</code> 中的 <strong>每个</strong> 元素加上精化条件，要求它不小于头部 <code>hd</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ data IncList a =
+        Emp
+      | (:&lt;) { hd :: a, tl :: IncList {v:a | hd &lt;= v}}  @-}
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明</strong>：代码用的是 <code>hd &lt;= v</code>，所以这里表示非递减顺序，允许相等的元素。原文此处用“greater than”描述，中文按实际规格解释为“大于等于”。</p>
+</blockquote>
+<h3 id="构造时就保证有序">构造时就保证有序<a class="heading-anchor" href="#构造时就保证有序" aria-label="链接到构造时就保证有序">#</a></h3>
+<p>同样，精化的数据定义会在内部生成一个带约束的“智能”构造器：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- Generated Internal representation
+data IncList a where
+  Emp  :: IncList a
+  (:&lt;) :: hd:a -&gt; tl:IncList {v:a | hd &lt;= v} -&gt; IncList a
+</code></pre></div>
+<p>因此，只有合法的有序列表才能通过检查：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">okList  = 1 :&lt; 2 :&lt; 3 :&lt; Emp      -- accepted by LH
+
+badList = 2 :&lt; 1 :&lt; 3 :&lt; Emp      -- rejected by LH
+</code></pre></div>
+<p>能 <strong>描述</strong> 有序列表只是第一步。接下来实现几个教科书里的排序算法，看看怎样在构造结果时 <strong>建立</strong> 这个不变量。</p>
+<h3 id="插入排序">插入排序<a class="heading-anchor" href="#插入排序" aria-label="链接到插入排序">#</a></h3>
+<p>先用插入排序把普通列表 <code>[a]</code> 转成有序列表 <code>IncList a</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">insertSort        :: (Ord a) =&gt; [a] -&gt; IncList a
+insertSort []     = Emp
+insertSort (x:xs) = insert x (insertSort xs)
+</code></pre></div>
+<p>主要工作交给 <code>insert</code>：它把一个元素放进有序列表中的正确位置。LiquidHaskell 能推断出，给 <code>insert</code> 一个元素和一个有序列表，得到的仍然是有序列表。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">insert             :: (Ord a) =&gt; a -&gt; IncList a -&gt; IncList a
+insert y Emp       = y :&lt; Emp
+insert y (x :&lt; xs)
+  | y &lt;= x         = y :&lt; x :&lt; xs
+  | otherwise      = x :&lt; insert y xs
+</code></pre></div>
+<h3 id="Insertion-Sort">练习：用 <code>foldr</code> 改写插入排序<a class="heading-anchor" href="#Insertion-Sort" aria-label="链接到练习：用 foldr 改写插入排序">#</a></h3>
+<p>补全下面的实现，用 <code>foldr</code> 代替 <code>insertSort</code> 中显式写出的递归。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">insertSort&#39;     :: (Ord a) =&gt; [a] -&gt; IncList a
+insertSort&#39; xs  = foldr f b xs
+  where
+     f          = undefined    -- Fill this in
+     b          = undefined    -- Fill this in
+</code></pre></div>
+<h3 id="归并排序">归并排序<a class="heading-anchor" href="#归并排序" aria-label="链接到归并排序">#</a></h3>
+<p>归并排序同样可以分成三步。第一步，把输入拆成两半：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">split          :: [a] -&gt; ([a], [a])
+split (x:y:zs) = (x:xs, y:ys)
+  where
+    (xs, ys)   = split zs
+split xs       = (xs, [])
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明</strong>：列表长度为奇数时，两半的长度会相差一个元素；不必恰好相等。</p>
+</blockquote>
+<p>第二步，把两个有序列表合并成一个有序列表：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">merge         :: (Ord a) =&gt; IncList a -&gt; IncList a -&gt; IncList a
+merge xs  Emp = xs
+merge Emp ys  = ys
+merge (x :&lt; xs) (y :&lt; ys)
+  | x &lt;= y    = x :&lt; merge xs (y :&lt; ys)
+  | otherwise = y :&lt; merge (x :&lt; xs) ys
+merge _ _     = Emp
+</code></pre></div>
+<p>最后，把这些步骤组合起来：用 <code>split</code> 分解问题，递归排序，再用 <code>merge</code> 合并结果。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">mergeSort :: (Ord a) =&gt; [a] -&gt; IncList a
+mergeSort []  = Emp
+mergeSort [x] = x :&lt; Emp
+mergeSort xs  = merge (mergeSort ys) (mergeSort zs)
+  where
+    (ys, zs)  = split xs
+</code></pre></div>
+<h3 id="QuickSort">练习：快速排序 ★★<a class="heading-anchor" href="#QuickSort" aria-label="链接到练习：快速排序 ★★">#</a></h3>
+<p>下面的 <code>quickSort</code> 为什么会被 LiquidHaskell 拒绝？修改它，让它通过检查。</p>
+<p><strong>提示：</strong> 先想清楚 <code>append</code> 需要满足什么条件，才能保证整个 <code>quickSort</code> 的结果有序。假设 <code>ys</code> 和 <code>zs</code> 各自有序，是否就意味着 <code>append x ys zs</code> 也有序？当然不是。还缺少什么条件？把这个直觉写进 <code>append</code> 的 <strong>规格</strong>，再让实现满足规格。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">quickSort           :: (Ord a) =&gt; [a] -&gt; IncList a
+quickSort []        = Emp
+quickSort (x:xs)    = append x lessers greaters
+  where
+    lessers         = quickSort [y | y &lt;- xs, y &lt; x ]
+    greaters        = quickSort [z | z &lt;- xs, z &gt;= x]
+
+{-@ append :: x:a -&gt; IncList a
+                  -&gt; IncList a
+                  -&gt; IncList a
+  @-}
+append z Emp       ys = z :&lt; ys
+append z (x :&lt; xs) ys = x :&lt; append z xs ys
+</code></pre></div>
+<h2 id="binarysearchtree">有序树<a class="heading-anchor" href="#binarysearchtree" aria-label="链接到有序树">#</a></h2>
+<p>最后来看二叉搜索树：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">data BST a = Leaf
+           | Node { root  :: a
+                  , left  :: BST a
+                  , right :: BST a }
+</code></pre></div>
+<p><a href="http://en.wikipedia.org/wiki/Binary_search_tree">二叉搜索树的关键性质</a>是：对每个节点而言，左子树中的所有值都 <strong>严格小于</strong> <code>root</code>，右子树中的所有值都 <strong>严格大于</strong> <code>root</code>。</p>
+<p>这个顺序不变量让查找变得简单。如果当前树是 <code>Leaf</code>，说明值不存在；如果目标等于根节点，就找到了；如果目标小于根节点，继续查左子树；如果大于根节点，继续查右子树。</p>
+<p><a id="fig:bst"></a></p>
+<p><img src="img/bst.png" alt="一棵二叉搜索树：每个根节点的值，都介于左子树与右子树的值之间。"></p>
+<p>上图用 <code>1</code> 到 <code>9</code> 中的一部分整数标记节点。对应的 Haskell 值可以写成：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">okBST :: BST Int
+okBST =  Node 6
+             (Node 2
+                 (Node 1 Leaf Leaf)
+                 (Node 4 Leaf Leaf))
+             (Node 9
+                 (Node 7 Leaf Leaf)
+                 Leaf)
+</code></pre></div>
+<h3 id="用精化的数据定义表达树的不变量">用精化的数据定义表达树的不变量<a class="heading-anchor" href="#用精化的数据定义表达树的不变量" aria-label="链接到用精化的数据定义表达树的不变量">#</a></h3>
+<p>普通 Haskell 类型没有提到顺序要求，因此也无法阻止我们创建违反顺序的 <code>BST</code>。可以用精化的数据定义补上这层约束。类型别名 <code>BSTL</code> 表示所有值都小于 <code>X</code> 的树，<code>BSTR</code> 表示所有值都大于 <code>X</code> 的树。</p>
+<blockquote>
+<p>原注：也可以把 <code>BSTL</code> 和 <code>BSTR</code> 的内容直接写进 <code>BST</code> 定义。不过，这两个别名在后面还会用到。</p>
+</blockquote>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ data BST a    = Leaf
+                  | Node { root  :: a
+                         , left  :: BSTL a root
+                         , right :: BSTR a root } @-}
+
+{-@ type BSTL a X = BST {v:a | v &lt; X}             @-}
+{-@ type BSTR a X = BST {v:a | X &lt; v}             @-}
+</code></pre></div>
+<p>与前面的例子一样，这会为 <code>BST</code> 生成带精化类型的智能构造器：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">data BST a where
+  Leaf :: BST a
+  Node :: r:a -&gt; BST {v:a| v &lt; r}
+       -&gt; BST {v:a | r &lt; v}
+       -&gt; BST a
+</code></pre></div>
+<p>这样就能拒绝不合法的树。例如，下面的 <code>69</code> 出现在根节点 <code>66</code> 的左子树里，违反了顺序不变量：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">badBST =  Node 66
+             (Node 4
+                 (Node 1 Leaf Leaf)
+                 (Node 69 Leaf Leaf))  -- Out of order, rejected
+             (Node 99
+                 (Node 77 Leaf Leaf)
+                 Leaf)
+</code></pre></div>
+<h3 id="Duplicates">练习：重复元素<a class="heading-anchor" href="#Duplicates" aria-label="链接到练习：重复元素">#</a></h3>
+<p>一个满足上述规格的 <code>BST Int</code> 能否包含重复元素？</p>
+<h3 id="查找元素">查找元素<a class="heading-anchor" href="#查找元素" aria-label="链接到查找元素">#</a></h3>
+<p>现在编写创建和操作这些树的函数。首先判断某个值是否在树中：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">mem                 :: (Ord a) =&gt; a -&gt; BST a -&gt; Bool
+mem _ Leaf          = False
+mem k (Node k&#39; l r)
+  | k == k&#39;         = True
+  | k &lt;  k&#39;         = mem k l
+  | otherwise       = mem k r
+</code></pre></div>
+<h3 id="单元素树">单元素树<a class="heading-anchor" href="#单元素树" aria-label="链接到单元素树">#</a></h3>
+<p>再做一个简单的热身：用给定元素创建一棵只有一个节点的树。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">one   :: a -&gt; BST a
+one x = Node x Leaf Leaf
+</code></pre></div>
+<h3 id="插入元素">插入元素<a class="heading-anchor" href="#插入元素" aria-label="链接到插入元素">#</a></h3>
+<p>下面把一个元素添加到 <code>BST</code> 中：</p>
+<blockquote>
+<p>原注：作者编写这个例子时，曾不小心把 <code>k</code> 和 <code>k&#39;</code> 写反，LiquidHaskell 随即指出了错误。</p>
+</blockquote>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">add                  :: (Ord a) =&gt; a -&gt; BST a -&gt; BST a
+add k&#39; Leaf          = one k&#39;
+add k&#39; t@(Node k l r)
+  | k&#39; &lt; k           = Node k (add k&#39; l) r
+  | k  &lt; k&#39;          = Node k l (add k&#39; r)
+  | otherwise        = t
+</code></pre></div>
+<h3 id="删除最小元素">删除最小元素<a class="heading-anchor" href="#删除最小元素" aria-label="链接到删除最小元素">#</a></h3>
+<p>接下来编写删除 <strong>最小元素</strong> 的函数。它同时返回两样东西：最小元素，以及删除这个元素后剩下的树。</p>
+<p>怎样描述“返回的元素确实是最小的”？只要说明剩余树里的每个元素都大于它即可。为此，先定义一个辅助类型：</p>
+<blockquote>
+<p>原注：专门定义辅助类型有些繁琐。理想情况下，可以直接使用普通二元组，再说明两个分量之间的依赖关系。<a href="http://goto.ucsd.edu/~rjhala/liquid/abstract_refinement_types.pdf">抽象精化</a>提供了表达这种关系的方法。</p>
+</blockquote>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">data MinPair a = MP { mElt :: a, rest :: BST a }
+</code></pre></div>
+<p>给这个类型添加精化，就能说明 <code>mElt</code> 小于 <code>rest</code> 中的所有元素：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ data MinPair a = MP { mElt :: a, rest :: BSTR a mElt} @-}
+</code></pre></div>
+<p>现在实现生成 <code>MinPair</code> 的函数：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">delMin                 :: (Ord a) =&gt; BST a -&gt; MinPair a
+delMin (Node k Leaf r) = MP k r
+delMin (Node k l r)    = MP k&#39; (Node k l&#39; r)
+  where
+    MP k&#39; l&#39;           = delMin l
+delMin Leaf            = die &quot;Don&#39;t say I didn&#39;t warn ya!&quot;
+</code></pre></div>
+<h3 id="Delete">练习：删除指定元素<a class="heading-anchor" href="#Delete" aria-label="链接到练习：删除指定元素">#</a></h3>
+<p>利用 <code>delMin</code> 补全 <code>del</code>。如果指定元素存在，就将它从树中删除。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">del                   :: (Ord a) =&gt; a -&gt; BST a -&gt; BST a
+del k&#39; t@(Node k l r) = undefined
+del _  Leaf           = Leaf
+</code></pre></div>
+<h3 id="Safely-Deleting-Minimum">练习：安全地删除最小元素 ★<a class="heading-anchor" href="#Safely-Deleting-Minimum" aria-label="链接到练习：安全地删除最小元素 ★">#</a></h3>
+<p><code>delMin</code> 只对非空树有意义。请先阅读<a href="Tutorial_06_Measure_Bool.html#usingmeasures">下一章的度量函数</a>，学习如何规定并验证“只接收非空树”，再把这个方法应用到这里，证明 <code>delMin</code> 中调用 <code>die</code> 的分支不会到达。</p>
+<h3 id="BST-Sort">练习：利用二叉搜索树排序<a class="heading-anchor" href="#BST-Sort" aria-label="链接到练习：利用二叉搜索树排序">#</a></h3>
+<p>补全 <code>toIncList</code>，得到基于二叉搜索树的排序函数 <code>bstSort</code>。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">bstSort   :: (Ord a) =&gt; [a] -&gt; IncList a
+bstSort   = toIncList . toBST
+
+toBST     :: (Ord a) =&gt; [a] -&gt; BST a
+toBST     = foldr add Leaf
+
+toIncList :: BST a -&gt; IncList a
+toIncList (Node x l r) = undefined
+toIncList Leaf         = undefined
+</code></pre></div>
+<p><strong>提示：</strong> 先完成快速排序中的练习，再做这道题会更容易。注意，<code>toIncList</code> 的签名里没有 <code>Ord</code> 约束，所以你 <strong>不能，也不需要</strong> 再调用一个依赖比较操作的排序过程。树本身已经包含了顺序信息。</p>
+<h2 id="回顾">回顾<a class="heading-anchor" href="#回顾" aria-label="链接到回顾">#</a></h2>
+<p>这一章介绍了如何给数据类型定义添加精化，以表达较复杂的不变量。内部实现方式是强化数据构造器的类型，让构造器自动具备“智能”：任何违反不变量的构造都无法通过验证。后面的案例还会继续使用这个方法。</p>
+<p>本章也反复遇到一个不太方便的地方：仅仅为了表达额外约束，我们不得不重新定义已有的数据结构。例如，另造一种列表，重复定义空列表和非空列表构造器；为了实现 <code>delMin</code>，又另造一种二元组。</p>
+<p>这种重复很繁琐。我们希望直接把所需不变量附加到 <strong>现有</strong> 类型上，从而复用已有实现。<a href="http://goto.ucsd.edu/~rjhala/liquid/abstract_refinement_types.pdf">抽象精化</a>朝这个方向更进一步：可以把精化条件从数据类型或函数定义中抽象出来，正如我们把 <code>[a]</code> 或 <code>BST a</code> 中的元素类型 <code>a</code> 抽象出来一样。</p>
+</article><nav class="chapter-pagination" aria-label="章节翻页"><a href="Tutorial_04_Polymorphism.html"><small>上一章</small><strong>04 多态</strong></a><a href="Tutorial_06_Measure_Bool.html"><small>下一章</small><strong>06 布尔度量</strong></a></nav><footer class="page-footer"><p>原著 Ranjit Jhala 与贡献者 · 中文翻译与讲解</p><p><a href="about.html">来源与译本说明</a><span>·</span><a href="LICENSE">MIT License</a><span>·</span><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_01_Introduction.html">英文教程</a></p></footer></main><aside class="toc" aria-label="本页目录"><p>本页内容</p><nav><a class="toc-depth-2" href="#autosmart">再看稀疏向量</a><a class="toc-depth-3" href="#把数据不变量写进定义">把数据不变量写进定义</a><a class="toc-depth-3" href="#数据构造器也有精化类型">数据构造器也有精化类型</a><a class="toc-depth-3" href="#把字段当作度量函数">把字段当作度量函数</a><a class="toc-depth-3" href="#稀疏向量的点积">稀疏向量的点积</a><a class="toc-depth-3" href="#用折叠实现点积">用折叠实现点积</a><a class="toc-depth-3" href="#Sanitization">练习：校验外部输入 ★</a><a class="toc-depth-3" href="#Addition">练习：稀疏向量相加</a><a class="toc-depth-2" href="#orderedlists">有序列表</a><a class="toc-depth-3" href="#构造时就保证有序">构造时就保证有序</a><a class="toc-depth-3" href="#插入排序">插入排序</a><a class="toc-depth-3" href="#Insertion-Sort">练习：用 foldr 改写插入排序</a><a class="toc-depth-3" href="#归并排序">归并排序</a><a class="toc-depth-3" href="#QuickSort">练习：快速排序 ★★</a><a class="toc-depth-2" href="#binarysearchtree">有序树</a><a class="toc-depth-3" href="#用精化的数据定义表达树的不变量">用精化的数据定义表达树的不变量</a><a class="toc-depth-3" href="#Duplicates">练习：重复元素</a><a class="toc-depth-3" href="#查找元素">查找元素</a><a class="toc-depth-3" href="#单元素树">单元素树</a><a class="toc-depth-3" href="#插入元素">插入元素</a><a class="toc-depth-3" href="#删除最小元素">删除最小元素</a><a class="toc-depth-3" href="#Delete">练习：删除指定元素</a><a class="toc-depth-3" href="#Safely-Deleting-Minimum">练习：安全地删除最小元素 ★</a><a class="toc-depth-3" href="#BST-Sort">练习：利用二叉搜索树排序</a><a class="toc-depth-2" href="#回顾">回顾</a></nav><a class="back-top" href="#main-content">回到顶部 ↑</a></aside></div>
+  <button class="nav-backdrop" id="nav-backdrop" aria-label="关闭章节导航" tabindex="-1" hidden></button>
+  <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><h2 id="search-title">搜索教程</h2><button class="dialog-close" id="search-close" aria-label="关闭搜索">Esc</button></div><label for="search-input" class="sr-only">输入中文、英文或代码名称</label><div class="search-input-wrap"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><input id="search-input" type="search" placeholder="试试「不变量」、measure、ByteString…" autocomplete="off"></div><p class="search-status" id="search-status" role="status">搜索全部章节与术语；多个关键词用空格分隔。</p><ol id="search-results" class="search-results"></ol></dialog>
+  <div class="sr-only" id="live-status" aria-live="polite"></div>
+</body>
+</html>

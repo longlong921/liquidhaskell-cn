@@ -1,0 +1,162 @@
+{
+  "repository": "https://github.com/ucsd-progsys/liquidhaskell-tutorial",
+  "commit": "077437f37e77d13a28ffabbf9be0330f88055ba6",
+  "files": [
+    {
+      "path": "examples/Tutorial_01_Introduction.lhs",
+      "upstream_path": "src/Tutorial_01_Introduction.lhs",
+      "git_blob_sha1": "121c55c6b9ddd7ecd20dcb1d6b0830bcf1fb3ee8",
+      "size": 7848
+    },
+    {
+      "path": "examples/Tutorial_02_Logic.lhs",
+      "upstream_path": "src/Tutorial_02_Logic.lhs",
+      "git_blob_sha1": "395c31c65cc9b736416cc648d798588b64860da0",
+      "size": 16559
+    },
+    {
+      "path": "examples/Tutorial_03_Basic.lhs",
+      "upstream_path": "src/Tutorial_03_Basic.lhs",
+      "git_blob_sha1": "e33369ca5976fcf18c73804d6bf2fb1dc0a201df",
+      "size": 12983
+    },
+    {
+      "path": "examples/Tutorial_04_Polymorphism.lhs",
+      "upstream_path": "src/Tutorial_04_Polymorphism.lhs",
+      "git_blob_sha1": "68279200a89cf208b2766d1491b267b8d2fd66af",
+      "size": 14813
+    },
+    {
+      "path": "examples/Tutorial_05_Datatypes.lhs",
+      "upstream_path": "src/Tutorial_05_Datatypes.lhs",
+      "git_blob_sha1": "0a66b872ed6114025c8241db88db415052381989",
+      "size": 19105
+    },
+    {
+      "path": "examples/Tutorial_06_Measure_Bool.lhs",
+      "upstream_path": "src/Tutorial_06_Measure_Bool.lhs",
+      "git_blob_sha1": "b58c758cf51e5f593264a4235cc06f7f718c673b",
+      "size": 11208
+    },
+    {
+      "path": "examples/Tutorial_07_Measure_Int.lhs",
+      "upstream_path": "src/Tutorial_07_Measure_Int.lhs",
+      "git_blob_sha1": "d36fd94cd205ff438e4e06924917ae906bd8d43e",
+      "size": 22086
+    },
+    {
+      "path": "examples/Tutorial_08_Measure_Set.lhs",
+      "upstream_path": "src/Tutorial_08_Measure_Set.lhs",
+      "git_blob_sha1": "6e4739a2d1f7e56ac85393151fb80c613821dafc",
+      "size": 23151
+    },
+    {
+      "path": "examples/Tutorial_09_Case_Study_Lazy_Queues.lhs",
+      "upstream_path": "src/Tutorial_09_Case_Study_Lazy_Queues.lhs",
+      "git_blob_sha1": "9ba8bc405ce53de8b6962b6e2b1abc475122ae4a",
+      "size": 11736
+    },
+    {
+      "path": "examples/Tutorial_10_Case_Study_Associative_Maps.lhs",
+      "upstream_path": "src/Tutorial_10_Case_Study_Associative_Maps.lhs",
+      "git_blob_sha1": "8469d073d6f2bf396c4bd75aed85df1eacc01252",
+      "size": 20522
+    },
+    {
+      "path": "examples/Tutorial_11_Case_Study_Pointers.lhs",
+      "upstream_path": "src/Tutorial_11_Case_Study_Pointers.lhs",
+      "git_blob_sha1": "819a47807e6247db5dbfc834d7c602f6c1a68b20",
+      "size": 32061
+    },
+    {
+      "path": "examples/Tutorial_12_Case_Study_AVL.lhs",
+      "upstream_path": "src/Tutorial_12_Case_Study_AVL.lhs",
+      "git_blob_sha1": "ec08ed84e9f6caebceb583e6ea3ce58b2ec4d98d",
+      "size": 27484
+    },
+    {
+      "path": "img/avl-balL0.png",
+      "upstream_path": "img/avl-balL0.png",
+      "git_blob_sha1": "bd769b2039a1bed2be21486cec2405ee1f9544ab",
+      "size": 72990
+    },
+    {
+      "path": "img/avl-balLL.png",
+      "upstream_path": "img/avl-balLL.png",
+      "git_blob_sha1": "4351d084e2c86d989e829b84b2a9ac02599619e5",
+      "size": 73055
+    },
+    {
+      "path": "img/avl-balLR.png",
+      "upstream_path": "img/avl-balLR.png",
+      "git_blob_sha1": "e8aed1820b58b7197242805f94b7b803fdbf2ab2",
+      "size": 90788
+    },
+    {
+      "path": "img/avl-insert0.png",
+      "upstream_path": "img/avl-insert0.png",
+      "git_blob_sha1": "3fb1758b88a9f0210679e5391d77a0035edeea29",
+      "size": 27835
+    },
+    {
+      "path": "img/avl.png",
+      "upstream_path": "img/avl.png",
+      "git_blob_sha1": "f2610ad8c49c9d621aa51264c33857baa15955eb",
+      "size": 42876
+    },
+    {
+      "path": "img/bst.png",
+      "upstream_path": "img/bst.png",
+      "git_blob_sha1": "b5e1a1831d5729070a5aa7145e7141c1099b74c8",
+      "size": 63168
+    },
+    {
+      "path": "img/bytestring.png",
+      "upstream_path": "img/bytestring.png",
+      "git_blob_sha1": "cd0fef3b30942e333b75baa47a21c97e13a1d752",
+      "size": 18449
+    },
+    {
+      "path": "img/overflow.png",
+      "upstream_path": "img/overflow.png",
+      "git_blob_sha1": "8b50517d8338a9ebe4cd1eff3ae3e571be1a88b6",
+      "size": 28318
+    },
+    {
+      "path": "img/piponi-tweet.png",
+      "upstream_path": "img/piponi-tweet.png",
+      "git_blob_sha1": "28ae741cf27340ecd749a4b1878f42a688c22ecc",
+      "size": 44980
+    },
+    {
+      "path": "img/queue-lists.png",
+      "upstream_path": "img/queue-lists.png",
+      "git_blob_sha1": "469b056bab4a806d1f2265efda28bbce2b4e5e8c",
+      "size": 80583
+    },
+    {
+      "path": "img/queue-rotate.png",
+      "upstream_path": "img/queue-rotate.png",
+      "git_blob_sha1": "8226fd9c40e89f52b774011b33110c65299ccf47",
+      "size": 74968
+    },
+    {
+      "path": "img/queue.png",
+      "upstream_path": "img/queue.png",
+      "git_blob_sha1": "ddc94ef950ff99f64306a6eb8b0def87accaae23",
+      "size": 58488
+    },
+    {
+      "path": "LICENSE",
+      "upstream_path": "LICENSE",
+      "git_blob_sha1": "bb72a98eaa93c6b9113db08f71340972c592cf5b",
+      "size": 1056
+    },
+    {
+      "path": "content/references.md",
+      "upstream_path": "templates/bib.lhs",
+      "git_blob_sha1": "2c21a7feaac4c7a2f9d358477d589ffc346e3e47",
+      "size": 4104
+    }
+  ]
+}

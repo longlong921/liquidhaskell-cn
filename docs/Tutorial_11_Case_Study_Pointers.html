@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="沿着指针、ByteString 到应用接口，区分可信假设与已验证保证。">
+  <meta name="theme-color" content="#f7f8f4">
+  <title>11. 指针与字节 · LiquidHaskell 中文教程</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/style.css">
+  <script>try{const t=localStorage.getItem('lh-cn-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch{}</script>
+  <script src="search-index.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body data-page="Tutorial_11_Case_Study_Pointers">
+  <a class="skip-link" href="#main-content">跳到正文</a>
+  <header class="topbar"><div class="topbar-inner">
+    <button class="icon-button mobile-menu" id="menu-toggle" aria-label="打开章节导航" aria-controls="chapter-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">λ</span><span>LiquidHaskell <span class="brand-language">中文教程</span></span></a>
+    <div class="top-actions"><button class="search-button" data-open-search aria-label="搜索教程"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><span>搜索教程</span><kbd>Ctrl K</kbd></button><button class="icon-button" id="theme-toggle" aria-label="切换明暗主题" title="切换明暗主题"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 13.1A8.7 8.7 0 0 1 10.9 3.5 8.7 8.7 0 1 0 20.5 13.1Z"/></svg></button><a class="repo-link" href="https://github.com/longlong921/liquidhaskell-cn">GitHub <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></a></div>
+  </div></header>
+  <div class="layout "><aside class="sidebar" id="chapter-navigation" aria-label="教程导航">
+    <a class="sidebar-home " href="index.html"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v15M3 4c4-1 7 0 9 2 2-2 5-3 9-2v14c-4-1-7 0-9 2-2-2-5-3-9-2Z"/></svg> 阅读首页</a>
+    <div class="nav-group"><p class="nav-label">I · 精化类型</p><ol start="1"><li><a href="Tutorial_01_Introduction.html" ><span class="nav-number">01</span><span>引言</span></a></li><li><a href="Tutorial_02_Logic.html" ><span class="nav-number">02</span><span>逻辑与 SMT</span></a></li><li><a href="Tutorial_03_Basic.html" ><span class="nav-number">03</span><span>精化类型</span></a></li><li><a href="Tutorial_04_Polymorphism.html" ><span class="nav-number">04</span><span>多态</span></a></li><li><a href="Tutorial_05_Datatypes.html" ><span class="nav-number">05</span><span>精化数据类型</span></a></li></ol></div><div class="nav-group"><p class="nav-label">II · 度量函数</p><ol start="6"><li><a href="Tutorial_06_Measure_Bool.html" ><span class="nav-number">06</span><span>布尔度量</span></a></li><li><a href="Tutorial_07_Measure_Int.html" ><span class="nav-number">07</span><span>数值度量</span></a></li><li><a href="Tutorial_08_Measure_Set.html" ><span class="nav-number">08</span><span>集合度量</span></a></li></ol></div><div class="nav-group"><p class="nav-label">III · 完整案例</p><ol start="9"><li><a href="Tutorial_09_Case_Study_Lazy_Queues.html" ><span class="nav-number">09</span><span>惰性队列</span></a></li><li><a href="Tutorial_10_Case_Study_Associative_Maps.html" ><span class="nav-number">10</span><span>键值映射</span></a></li><li><a href="Tutorial_11_Case_Study_Pointers.html" aria-current="page" class="active"><span class="nav-number">11</span><span>指针与字节</span></a></li><li><a href="Tutorial_12_Case_Study_AVL.html" ><span class="nav-number">12</span><span>AVL 树</span></a></li></ol></div>
+    <div class="nav-extras"><a href="guide.html" >阅读与练习指南</a><a href="glossary.html" >中英术语表</a><a href="about.html" >译本说明与来源</a></div>
+    <div class="sidebar-note"><span class="status-dot"></span>12 章完整译文<br><small>原文示例 · 练习 · 译者说明</small></div>
+  </aside><main id="main-content" tabindex="-1"><div class="reading-progress" aria-hidden="true"><span id="reading-progress"></span></div><header class="chapter-header"><p class="eyebrow">第 11 章 <span>/</span> 完整案例</p><h1>指针与字节</h1><p class="chapter-subtitle">案例：底层内存安全</p><div class="chapter-links"><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_11_Case_Study_Pointers.html">对照英文原文 ↗</a><a href="examples/Tutorial_11_Case_Study_Pointers.lhs" download>下载原始示例 ↓</a></div></header><div class="reading-note"><strong>阅读提示</strong> 代码与练习保留原貌；标为「译者说明」的内容是补充讲解。运行前请阅读<a href="guide.html#environment">环境说明</a>。</div><article class="prose"><span class="chapter-anchor" id="case-study-pointers"></span>
+<p>Haskell 的魅力之一，是用优雅的高层代数数据类型（ADT）帮助程序避开许多底层内存错误，例如臭名昭著的 <a href="https://heartbleed.com/">Heartbleed</a> 一类问题。它的另一个吸引力则是：确有需要时，你仍然可以深入底层，直接操作指针，尽可能发挥机器性能。不过，这也重新打开了内存越界错误的大门。</p>
+<blockquote>
+<p>原注：这里当然还要假设编译器和运行时本身没有相关错误。</p>
+</blockquote>
+<p>有没有可能同时拥有底层指针操作的性能，以及高层类型提供的安全保障？下面看看 LiquidHaskell 怎样帮助我们把两者结合起来。</p>
+<blockquote>
+<p><strong>译者说明：</strong> 本章使用教程中的简化 <code>ByteString</code> 表示和历史 API，演示如何为指针边界写规格。它不是当前 <code>bytestring</code> 内部布局或现存漏洞的报告；示例中的内存内容也只是原文当时的运行结果。保留这些代码是为了理解验证思路，不应直接复制为生产内存库。</p>
+</blockquote>
+<h2 id="haskell-也可能发生类似-heartbleed-的问题">Haskell 也可能发生类似 Heartbleed 的问题<a class="heading-anchor" href="#haskell-也可能发生类似-heartbleed-的问题" aria-label="链接到Haskell 也可能发生类似 Heartbleed 的问题">#</a></h2>
+<p>Haskell 这样的高级语言，最终仍依赖底层运行时、C 代码和机器操作。底层实现中的错误，可能绕过普通类型检查，甚至在人工审查时被忽略。看一个使用 <code>ByteString</code> 截取字符串的例子：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">chop&#39;     :: String -&gt; Int -&gt; String
+chop&#39; s n = s&#39;
+  where
+    b     = pack s          -- down to low-level
+    b&#39;    = unsafeTake n b  -- grab n chars
+    s&#39;    = unpack b&#39;       -- up to high-level
+</code></pre></div>
+<p>函数先用 <code>pack</code> 把字符串变为较底层的字节串 <code>b</code>，再取出前 <code>n</code> 个单位，最后用 <code>unpack</code> 转回 <code>String</code>。先定义一个小测试输入：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">ghci&gt; let ex = &quot;Ranjit Loves Burritos&quot;
+</code></pre></div>
+<p>截取长度合法时，结果符合预期：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">ghci&gt; chop&#39; ex 10
+&quot;Ranjit Lov&quot;
+</code></pre></div>
+<p>如果指定的前缀长度超出有效范围，程序却可能悄悄暴露相邻内存的内容，如<a href="#fig:overflow">下面的示意图</a>所示：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">ghci&gt; chop&#39; ex 30
+&quot;Ranjit Loves Burritos\NUL\201\&amp;1j\DC3\SOH\NUL&quot;
+</code></pre></div>
+<p><a id="fig:overflow"></a></p>
+<p><img src="img/overflow.png" alt="越界读取可能把原字符串之后的内存内容暴露出来。"></p>
+<blockquote>
+<p><strong>译者说明：</strong> 这里的演示使用逐字节转换，不是通用 Unicode 编码方案。<code>ByteString</code> 长度按字节计；<code>String</code> 长度按 <code>Char</code> 个数计。只有具体编码模型允许时，才能把这两个长度直接对应起来。</p>
+</blockquote>
+<p><strong>用类型防止越界。</strong> 问题已经清楚了，接下来尝试在编译时排除它。我们把系统分成三层，也可以理解为三个模块层次：</p>
+<ol>
+<li>机器层：<code>Pointers</code>。</li>
+<li>库层：<code>ByteString</code>。</li>
+<li>用户程序层：<code>Application</code>。</li>
+</ol>
+<p>策略仍然是：为每一层定义精化 API，让上层通过满足下层接口约束，避免相应错误。先从指针开始。</p>
+<h2 id="底层指针-api">底层指针 API<a class="heading-anchor" href="#底层指针-api" aria-label="链接到底层指针 API">#</a></h2>
+<p>先认识 GHC 和运行时提供的基本指针接口，看看危险从哪里进入，再用 LiquidHaskell 给这些入口添加约束。</p>
+<p><strong>指针。</strong> GHC 提供抽象类型 <code>Ptr a</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- | A value of type `Ptr a` represents a pointer to an object,
+--   or an array of objects, which may be marshalled to or from
+--   Haskell values of type `a`.
+
+data Ptr a
+</code></pre></div>
+<p><strong>外部指针。</strong> <code>ForeignPtr</code> 是包装后的指针，用于<a href="http://hackage.haskell.org/package/base/docs/Foreign-Ptr.html">外部函数接口（FFI）</a>相关的交互：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">data ForeignPtr a
+</code></pre></div>
+<p><strong>创建指针。</strong> <code>mallocForeignPtrBytes n</code> 分配 <code>n</code> 字节的缓冲区，再将得到的指针包装成 <code>ForeignPtr</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">mallocForeignPtrBytes :: Int -&gt; ForeignPtr a
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明：</strong> 原文上面的展示签名漏掉了 <code>IO</code>。实际分配是有副作用的；<a href="https://github.com/ghc/ghc/blob/master/libraries/ghc-internal/src/GHC/Internal/ForeignPtr.hs">GHC 源码中的签名</a>带有 <code>IO</code>，教程完整源码中的规格也写成 <code>n:Nat -&gt; IO (ForeignPtrN a n)</code>。这里保留原始展示代码，并在文字中指出，避免把它误认为纯函数。</p>
+</blockquote>
+<p><strong>拆开包装。</strong> 要使用 <code>ForeignPtr</code> 中实际的指针，通过下面的接口：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">withForeignPtr :: ForeignPtr a     -- pointer
+               -&gt; (Ptr a -&gt; IO b)  -- action
+               -&gt; IO b             -- result
+</code></pre></div>
+<p><code>withForeignPtr fp act</code> 会让动作 <code>act</code> 使用 <code>fp</code> 包装的 <code>Ptr</code>。这些动作通常是一系列解引用操作，也就是读取或写入。</p>
+<p><strong>解引用。</strong> 读取指针所指位置使用 <code>peek</code>，更新该位置使用 <code>poke</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">peek :: Ptr a -&gt; IO a         -- Read
+poke :: Ptr a -&gt; a -&gt; IO ()   -- Write
+</code></pre></div>
+<blockquote>
+<p>原注：为突出核心概念，这里的展示省略了 <code>Storable</code> 类型类约束。</p>
+</blockquote>
+<p><strong>按偏移访问。</strong> 通过指针算术 <code>plusPtr p off</code>，可以将指针 <code>p</code> 向前移动 <code>off</code> 个字节，得到新的地址：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">plusPtr :: Ptr a -&gt; Int -&gt; Ptr b
+</code></pre></div>
+<p><strong>例子。</strong> 只看接口有些抽象，下面分配 4 字节缓冲区，并将每个字节填为零：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">zero4 = do fp &lt;- mallocForeignPtrBytes 4
+           withForeignPtr fp $ \p -&gt; do
+             poke (p `plusPtr` 0) zero
+             poke (p `plusPtr` 1) zero
+             poke (p `plusPtr` 2) zero
+             poke (p `plusPtr` 3) zero
+           return fp
+        where
+           zero = 0 :: Word8
+</code></pre></div>
+<p>这段代码没有问题；但只要写错一个偏移量，就可能绕过普通类型检查，造成难以发现的内存错误：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">zero4&#39; = do fp &lt;- mallocForeignPtrBytes 4
+            withForeignPtr fp $ \p -&gt; do
+              poke (p `plusPtr` 0) zero
+              poke (p `plusPtr` 1) zero
+              poke (p `plusPtr` 2) zero
+              poke (p `plusPtr` 8) zero
+            return fp
+         where
+            zero = 0 :: Word8
+</code></pre></div>
+<h2 id="为指针-api-添加精化约束">为指针 API 添加精化约束<a class="heading-anchor" href="#为指针-api-添加精化约束" aria-label="链接到为指针 API 添加精化约束">#</a></h2>
+<p>如果写下错误的那一刻，就有人指出越界，该有多好。我们可以让 LiquidHaskell 扮演这个角色，采用三步策略：</p>
+<ol>
+<li>用精化条件描述指针关联的缓冲区大小。</li>
+<li>在指针操作中跟踪大小变化。</li>
+<li>在实际读取、写入时强制检查指针是否合法。</li>
+</ol>
+<blockquote>
+<p>原注：在支持的编辑器或在线环境中，错误可以直接在代码位置显示出来。</p>
+</blockquote>
+<p><strong>描述指针大小。</strong> 用一个没有 Haskell 实现的 <strong>抽象度量函数</strong>，表示相关缓冲区的大小：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">-- | Size of `Ptr`
+measure plen  :: Ptr a -&gt; Int
+
+-- | Size of `ForeignPtr`
+measure fplen :: ForeignPtr a -&gt; Int
+</code></pre></div>
+<p>然后定义别名，表示关联缓冲区大小恰好为 <code>N</code> 的指针：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">type PtrN a N        = {v:Ptr a        | plen v  = N}
+type ForeignPtrN a N = {v:ForeignPtr a | fplen v = N}
+</code></pre></div>
+<p><strong>抽象度量函数</strong> 适合这种情况：我们知道某项信息客观存在，但无法直接在 Haskell 数据表示里取到它。这里缓冲区由底层代码管理，因此没有现成的 Haskell 字段可读。没有关系，我们只在逻辑规格中使用这些度量函数，不会真的调用它们去计算大小。</p>
+<blockquote>
+<p>原注：这又是一种“幽灵”规格。</p>
+</blockquote>
+<p><strong>精化分配操作。</strong> 要求分配大小非负，并声明返回指针对应的缓冲区恰好有 <code>n</code> 字节：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">mallocForeignPtrBytes :: n:Nat -&gt; ForeignPtrN a n
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明：</strong> 这一展示签名同样省略了 <code>IO</code>；它要强调的是输入的 <code>n</code> 与结果的 <code>fplen</code> 相等，实际完整类型仍然包含 <code>IO</code>。</p>
+</blockquote>
+<p><strong>精化拆包装操作。</strong> 传给动作的裸 <code>Ptr</code>，缓冲区大小必须与原 <code>ForeignPtr</code> 一致：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">withForeignPtr :: fp:ForeignPtr a
+               -&gt; (PtrN a (fplen fp) -&gt; IO b)
+               -&gt; IO b
+</code></pre></div>
+<p>这是一个有意思的 <strong>高阶规格</strong>。考虑 <code>withForeignPtr fp act</code>：如果 <code>act</code> 要求的缓冲区大于 <code>fp</code> 实际拥有的大小，LiquidHaskell 就会报告子类型关系不成立，指出潜在越界。反过来，如果动作只需访问更小的范围，在更大的合法缓冲区上执行它是安全的。</p>
+<p>例如下面的 <code>zero3</code> 分配 4 字节，只写入前三个字节。传给动作的指针大小可以是 <code>4</code>，即使实际只接触了 <code>3</code> 字节，也完全合法：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">zero3 = do fp &lt;- mallocForeignPtrBytes 4
+           withForeignPtr fp $ \p -&gt; do
+             poke (p `plusPtr` 0) zero
+             poke (p `plusPtr` 1) zero
+             poke (p `plusPtr` 2) zero
+           return fp
+        where
+           zero = 0 :: Word8
+</code></pre></div>
+<p><strong>精化读取和写入。</strong> 只有指针后方的剩余缓冲区非空时，才允许读写一个字节。先定义别名：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">type OkPtr a = {v:Ptr a | 0 &lt; plen v}
+</code></pre></div>
+<p><code>OkPtr</code> 要求 <code>plen</code> <strong>严格大于零</strong>。然后用它约束读写操作：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">peek :: OkPtr a -&gt; IO a
+poke :: OkPtr a -&gt; a -&gt; IO ()
+</code></pre></div>
+<p>这些类型的含义是：无论前面怎样移动指针，真正解引用时，剩余范围必须至少容得下要访问的数据。</p>
+<blockquote>
+<p><strong>译者说明：</strong> 原文这段文字写成“剩余大小非负”，但其规格实际要求 <code>0 &lt; plen v</code>，读取一个字节时必须严格为正。并且这组简化规格主要针对本章的 <code>Word8</code>：如果推广到任意 <code>Storable a</code>，还需要考虑 <code>sizeOf a</code>、对齐等条件，不能仅凭“至少一个字节”就保证任意类型的访问安全。</p>
+</blockquote>
+<p><strong>精化指针移动。</strong> 检查偏移后仍未超出缓冲区，并更新 <code>plen</code>，反映移动后的剩余空间：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">plusPtr :: p:Ptr a -&gt; off:BNat (plen p) -&gt; PtrN b (plen p - off)
+</code></pre></div>
+<p>其中 <code>BNat</code> 是非负且不超过给定上界的整数：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">type BNat N = {v:Nat | v &lt;= N}
+</code></pre></div>
+<blockquote>
+<p>原注：这个签名不允许负偏移，也就是向左或向后移动。原文提到可以为反方向操作建立相应规格，这里为简单起见不展开。</p>
+<p><strong>译者说明：</strong> 标准 <a href="https://github.com/ghc/ghc/blob/master/libraries/ghc-internal/src/GHC/Internal/Ptr.hs"><code>Foreign.Ptr.minusPtr</code></a> 计算两个指针之间的字节差，不能直接当作“把指针向后移动”的函数使用。后退移动通常会涉及带负偏移的 <code>plusPtr</code> 及更完整的起始边界模型；上面的受限规格明确没有覆盖这种用法。</p>
+</blockquote>
+<blockquote>
+<p>原注：你可能已经注意到，这里增强了 <code>plusPtr</code> 的约束，在移动时就禁止超出缓冲区。也可以选择更弱的移动规格，等到真正读写内存时再报错。</p>
+</blockquote>
+<blockquote>
+<p><strong>译者说明：</strong> 偏移量可以等于剩余长度，因此允许形成指向末尾之后的指针，此时 <code>plen = 0</code>；但它不能满足 <code>OkPtr</code>，所以不允许再解引用。这区分了“能够表示的地址”和“能够读取的地址”。</p>
+</blockquote>
+<p><strong>类型如何阻止越界。</strong> 再看清零例子：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">exBad = do fp &lt;- mallocForeignPtrBytes 4
+           withForeignPtr fp $ \p -&gt; do
+             poke (p `plusPtr` 0) zero
+             poke (p `plusPtr` 1) zero
+             poke (p `plusPtr` 2) zero
+             poke (p `plusPtr` 5) zero     -- LH complains
+           return fp
+        where
+           zero = 0 :: Word8
+</code></pre></div>
+<p>报错内容如下：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">  Error: Liquid Type Mismatch
+   Inferred type
+     VV : {VV : Int | VV == ?a &amp;&amp; VV == 5}
+
+   not a subtype of Required type
+     VV : {VV : Int | VV &lt;= plen p}
+
+   in Context
+     zero : {zero : Word8 | zero == ?b}
+     VV   : {VV : Int | VV == ?a &amp;&amp; VV == (5  :  int)}
+     fp   : {fp : ForeignPtr a | fplen fp == ?c &amp;&amp; 0 &lt;= fplen fp}
+     p    : {p  : Ptr a | fplen fp == plen p &amp;&amp; ?c &lt;= plen p &amp;&amp; ?b &lt;= plen p &amp;&amp; zero &lt;= plen p}
+     ?a   : {?a : Int | ?a == 5}
+     ?c   : {?c : Int | ?c == 4}
+     ?b   : {?b : Integer | ?b == 0}
+</code></pre></div>
+<p>错误指出：我们想用 <code>plusPtr</code> 将 <code>p</code> 向前移动 <code>5</code>，也就是 <code>VV == 5</code>；但接口要求 <code>VV &lt;= plen p</code>。当时的环境还知道：</p>
+<div class="code-block"><div class="code-toolbar"><span>输出 / 示例</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-text">     p    : {p : Ptr a | fplen fp == plen p &amp;&amp; ?c &lt;= plen p &amp;&amp; ?b &lt;= plen p &amp;&amp; zero &lt;= plen p}
+     fp   : {fp : ForeignPtr a | fplen fp == ?c &amp;&amp; 0 &lt;= fplen fp}
+</code></pre></div>
+<p><code>withForeignPtr</code> 让我们知道，<code>plen p</code> 与 <code>fplen fp</code> 相等；而后者等于 <code>?c</code>，即分配时的 <code>4</code> 字节。由于 <code>5</code> 超过了 <code>4</code>，检查器无法证明移动合法，所以拒绝该调用。</p>
+<h2 id="假设与保证">假设与保证<a class="heading-anchor" href="#假设与保证" aria-label="链接到假设与保证">#</a></h2>
+<p>读到这里，你可能会问：<code>peek</code>、<code>poke</code>、<code>mallocForeignPtrBytes</code> 的实现在哪里？怎么知道给它们写的类型是真的？</p>
+<p>坦白说，<strong>仅靠这里的 LiquidHaskell 验证，我们不能知道</strong>。这些操作由它看不到的外部底层实现提供，所以我们是在 <strong>假设</strong> 或 <strong>信任</strong> 它们遵守给出的规格。</p>
+<p>换句话说，低层 API 的类型描述了我们要求的指针安全契约。接下来能证明的是：建立在这些 API 之上的 Haskell 模块，确实按照契约要求使用了它们。</p>
+<p>允许假设边界规格很有价值，因为现实系统经常依赖无法同时验证、甚至没有源码的模块。我们可以先信任这些边界，再证明其余代码相对于这些边界是安全的。</p>
+<blockquote>
+<p>原注：必要时，也可以<a href="http://en.wikipedia.org/wiki/Design_by_contract">在运行时检查边界契约</a>；这属于运行时契约检查，不是本章 LiquidHaskell 静态验证的内容。</p>
+</blockquote>
+<blockquote>
+<p><strong>译者说明：</strong> <code>assume</code> 的含义是“把这条规格当作前提”，不是“验证工具已经检查过实现”。假设不正确，依赖它的证明就可能与真实程序行为脱节。接口规格、FFI、编译器和运行时等受信任部分，仍然需要适当的审查与测试。</p>
+</blockquote>
+<h2 id="bytestring-api">ByteString API<a class="heading-anchor" href="#bytestring-api" aria-label="链接到ByteString API">#</a></h2>
+<p>接下来使用底层指针 API，实现一个<a href="https://hackage.haskell.org/package/bytestring">字节串</a>接口，在保持高效的同时约束越界行为。</p>
+<p><strong>表示。</strong> 教程中的 <code>ByteString</code> 由三个字段构成：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">data ByteString = BS {
+    bPtr :: ForeignPtr Word8
+  , bOff :: !Int
+  , bLen :: !Int
+  }
+</code></pre></div>
+<ul>
+<li><code>bPtr</code> 指向一块内存。</li>
+<li><code>bOff</code> 表示字节串从这块内存的哪个偏移开始。</li>
+<li><code>bLen</code> 表示从起点开始，有多少字节属于这个字节串。</li>
+</ul>
+<p><a href="#fig:bytestring">下图</a>的绿色部分表示某个 <code>ByteString</code> 真正包含的内容。有了这个表示，许多前缀、后缀操作只需调整偏移量和长度，不必复制内容，因此可以很快。</p>
+<p><a id="fig:bytestring"></a></p>
+<p><img src="img/bytestring.png" alt="ByteString 的指针、起始偏移与长度；绿色部分是实际内容。"></p>
+<p><strong>合法性。</strong> 一个合法的 <code>ByteString</code>，其起点 <code>bOff</code> 和终点 <code>bOff + bLen</code> 都必须落在 <code>bPtr</code> 指向的缓冲区边界以内。把它写进精化数据定义，就能阻止不合法的构造：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ data ByteString = BS {
+      bPtr :: ForeignPtr Word8
+    , bOff :: {v:Nat| v        &lt;= fplen bPtr}
+    , bLen :: {v:Nat| v + bOff &lt;= fplen bPtr}
+    }
+  @-}
+</code></pre></div>
+<p><code>bOff</code> 和 <code>bLen</code> 上的条件，恰好表达了起止位置不能超出底层内存块。</p>
+<p>为了简洁，定义一个给定长度的字节串别名：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type ByteStringN N = {v:ByteString | bLen v = N} @-}
+</code></pre></div>
+<p><strong>合法构造。</strong> 只要传入的偏移和长度合适，就可以直接使用构造函数。例如：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ good1 :: IO (ByteStringN 5) @-}
+good1 = do fp &lt;- mallocForeignPtrBytes 5
+           return (BS fp 0 5)
+</code></pre></div>
+<p>这里创建了长度为 <code>5</code> 的合法字节串。但字节串不一定从缓冲区开头开始，也不必用满整块内存。例如，下面的 <code>good2</code> 只使用 5 字节缓冲区中的最后 2 字节：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ good2 :: IO (ByteStringN 2) @-}
+good2 = do fp &lt;- mallocForeignPtrBytes 5
+           return (BS fp 3 2)
+</code></pre></div>
+<p><strong>非法构造。</strong> LiquidHaskell 会拒绝越界的表示。比如 <code>bad1</code> 声称包含的长度，超过实际分配大小：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">bad1 = do fp &lt;- mallocForeignPtrBytes 3
+          return (BS fp 0 10)
+</code></pre></div>
+<p>再看 <code>bad2</code>：缓冲区确实能容纳 2 字节，但如果从偏移 <code>2</code> 开始，就容不下了：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">bad2 = do fp &lt;- mallocForeignPtrBytes 3
+          return (BS fp 2 2)
+</code></pre></div>
+<h3 id="练习-合法的-bytestring">练习：合法的 ByteString<a class="heading-anchor" href="#练习-合法的-bytestring" aria-label="链接到练习：合法的 ByteString">#</a></h3>
+<p>修改 <code>bad1</code> 和 <code>bad2</code>，使它们通过 LiquidHaskell 检查。</p>
+<h3 id="工具提示-字段也能提供度量信息">工具提示：字段也能提供度量信息<a class="heading-anchor" href="#工具提示-字段也能提供度量信息" aria-label="链接到工具提示：字段也能提供度量信息">#</a></h3>
+<p>数据类型的字段可以生成度量函数。GHC 同时会生成字段访问函数，因此还可以精化这些访问函数的类型。例如，下面要求 <code>bLen</code> 返回值恰好等于输入字节串的逻辑长度：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ bLen :: b:ByteString -&gt; {v: Nat | v = bLen b} @-}
+</code></pre></div>
+<p><strong>安全创建。</strong> 实现中提供一个高阶 <code>create</code>：它接收长度 <code>n</code> 和填充动作 <code>fill</code>，先分配缓冲区，再运行填充动作，最后包装成长度为 <code>n</code> 的 <code>ByteString</code>。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ create :: n:Nat -&gt; (Ptr Word8 -&gt; IO ()) -&gt; ByteStringN n @-}
+create n fill = unsafePerformIO $ do
+  fp  &lt;- mallocForeignPtrBytes n
+  withForeignPtr fp fill
+  return (BS fp 0 n)
+</code></pre></div>
+<h3 id="练习-创建">练习：创建（★）<a class="heading-anchor" href="#练习-创建" aria-label="链接到练习：创建（★）">#</a></h3>
+<p>为什么 LiquidHaskell 会拒绝下面这个生成 <code>&quot;GHC&quot;</code> 的函数？</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">bsGHC = create 3 $ \p -&gt; do
+  poke (p `plusPtr` 0) (c2w &#39;G&#39;)
+  poke (p `plusPtr` 1) (c2w &#39;H&#39;)
+  poke (p `plusPtr` 2) (c2w &#39;C&#39;)
+</code></pre></div>
+<p><strong>提示：</strong> 函数从 <code>p</code> 开始写入 3 个位置，<code>plen p</code> 至少需要多大？根据上面的 <code>create</code> 签名，检查器能知道 <code>p</code> 有多大吗？应该修改规格还是实现的哪个部分，才能把必需的信息带进这个 <code>do</code> 块？想清楚后再继续。</p>
+<p><strong>打包。</strong> 把 <code>String</code> 转为 <code>ByteString</code>，只需调用 <code>create</code> 并提供适当的填充动作：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">pack str      = create&#39; n $ \p -&gt; go p xs
+  where
+  n           = length str
+  xs          = map c2w str
+  go p (x:xs) = poke p x &gt;&gt; go (plusPtr p 1) xs
+  go _ []     = return  ()
+</code></pre></div>
+<blockquote>
+<p>原注：这里用了 <code>create&#39;</code>。它就是具有正确签名的 <code>create</code>，完整源码中提供了它，方便尚未完成前一道练习的读者继续阅读；不过还是建议先完成练习。</p>
+</blockquote>
+<h3 id="练习-打包后的长度">练习：打包后的长度<a class="heading-anchor" href="#练习-打包后的长度" aria-label="链接到练习：打包后的长度">#</a></h3>
+<p>可以通过长度函数观察字节串大小。修改 <code>pack</code> 的规格，让实现仍然能通过检查，并证明下面这个 <a href="Tutorial_08_Measure_Set.html#quickcheck">QuickCheck 风格的性质</a>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ prop_pack_length  :: String -&gt; TRUE @-}
+prop_pack_length xs   = bLen (pack xs) == length xs
+</code></pre></div>
+<p><strong>提示：</strong> 看看 <code>length</code> 的类型，并回忆 <code>len</code> 是表示列表长度的<a href="Tutorial_07_Measure_Int.html#numericmeasure">数值度量函数</a>。</p>
+<p><strong>类型推断的作用。</strong> <code>pack</code> 里有一个小而精巧的递归函数 <code>go</code>，负责逐字节填充内存。它需要的类型约束其实不简单，但 LiquidHaskell 能推断出来，因此调用者不必手写完整签名。</p>
+<h3 id="练习-打包循环的不变量">练习：打包循环的不变量（★）<a class="heading-anchor" href="#练习-打包循环的不变量" aria-label="链接到练习：打包循环的不变量（★）">#</a></h3>
+<p>为了真正理解推断出来的关系，请自己给 <code>pLoop</code> 写出类型签名，让下面的 <code>pack</code> 变体通过验证。先不要偷看前面 <code>go</code> 的推断类型。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">packEx str     = create&#39; n $ \p -&gt; pLoop p xs
+  where
+  n            = length str
+  xs           = map c2w str
+
+{-@ pLoop      :: (Storable a) =&gt; p:Ptr a -&gt; xs:[a] -&gt; IO () @-}
+pLoop p (x:xs) = poke p x &gt;&gt; pLoop (plusPtr p 1) xs
+pLoop _ []     = return ()
+</code></pre></div>
+<p><strong>提示：</strong> <code>len xs</code> 表示列表 <code>xs</code> 的长度。</p>
+<h3 id="练习-unsafetake-与-unsafedrop">练习：unsafeTake 与 unsafeDrop<a class="heading-anchor" href="#练习-unsafetake-与-unsafedrop" aria-label="链接到练习：unsafeTake 与 unsafeDrop">#</a></h3>
+<p><code>unsafeTake</code> 和 <code>unsafeDrop</code> 从指定位置取得字节串的前缀与后缀。它们只调整表示中的偏移或长度，因此速度很快。为什么 LiquidHaskell 拒绝下面的版本？请修正规格，让它们通过检查。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ unsafeTake :: n:Nat -&gt; b:_ -&gt; ByteStringN n @-}
+unsafeTake n (BS x s _) = BS x s n
+
+{-@ unsafeDrop :: n:Nat -&gt; b:_ -&gt; ByteStringN {bLen b - n} @-}
+unsafeDrop n (BS x s l) = BS x (s + n) (l - n)
+</code></pre></div>
+<p><strong>提示：</strong> 返回的 <code>ByteString</code> 在什么条件下才合法？</p>
+<p><strong>解包。</strong> 把 <code>ByteString</code> 转回 <code>String</code>，大体就是把 <code>pack</code> 反过来：沿着指针逐个读取字符，直到结束。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">unpack              :: ByteString -&gt; String
+unpack (BS _  _ 0)  = []
+unpack (BS ps s l)  = unsafePerformIO
+                        $ withForeignPtr ps
+                        $ \p -&gt; go (p `plusPtr` s) (l - 1) []
+  where
+    {-@ go     :: p:_ -&gt; n:_ -&gt; acc:_ -&gt; IO {v:_ | true } @-}
+    go p 0 acc = peekAt p 0 &gt;&gt;= \e -&gt; return (w2c e : acc)
+    go p n acc = peekAt p n &gt;&gt;= \e -&gt; go p (n-1) (w2c e : acc)
+    peekAt p n = peek (p `plusPtr` n)
+</code></pre></div>
+<h3 id="练习-解包">练习：解包（★）<a class="heading-anchor" href="#练习-解包" aria-label="链接到练习：解包（★）">#</a></h3>
+<p>修改 <code>unpack</code> 的规格，使 LiquidHaskell 能证明下面的 QuickCheck 风格性质：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ prop_unpack_length :: ByteString -&gt; TRUE @-}
+prop_unpack_length b   = bLen b == length (unpack b)
+</code></pre></div>
+<p><strong>提示：</strong> 还需要修改辅助函数 <code>go</code> 的规格。它的结果条件不应只有 <code>true</code>：根据 <code>p</code>、<code>n</code> 和累加器 <code>acc</code>，返回列表的长度应该是多少？</p>
+<h2 id="应用层-api">应用层 API<a class="heading-anchor" href="#应用层-api" aria-label="链接到应用层 API">#</a></h2>
+<p>回到可能泄漏内存内容的 <code>chop</code>。有了精化后的 <code>ByteString</code> API，现在可以要求前缀长度 <code>n</code> 非负，并且不超过输入字符串 <code>s</code> 的长度：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ chop :: s:String -&gt; n:BNat (len s) -&gt; String @-}
+chop s n = s&#39;
+  where
+    b    = pack s          -- down to low-level
+    b&#39;   = unsafeTake n b  -- grab n chars
+    s&#39;   = unpack b&#39;       -- up to high-level
+</code></pre></div>
+<p>LiquidHaskell 会拒绝前缀过长的调用，从而阻止前面那种读取字符串之后内存的错误。下面的 <code>ex6</code> 合法，因为 <code>6 &lt;= len ex</code>；<code>ex30</code> 则不合法，因为 <code>30 &gt; len ex</code>。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">demo     = [ex6, ex30]
+  where
+    ex   = [&#39;L&#39;,&#39;I&#39;,&#39;Q&#39;,&#39;U&#39;,&#39;I&#39;,&#39;D&#39;]
+    ex6  = chop ex 6   -- accepted by LH
+    ex30 = chop ex 30  -- rejected by LH
+</code></pre></div>
+<h3 id="练习-截取后的长度">练习：截取后的长度<a class="heading-anchor" href="#练习-截取后的长度" aria-label="链接到练习：截取后的长度">#</a></h3>
+<p>增强 <code>chop</code> 的规格，使下面这个性质得到证明：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ prop_chop_length  :: String -&gt; Nat -&gt; TRUE @-}
+prop_chop_length s n
+  | n &lt;= length s     = length (chop s n) == n
+  | otherwise         = True
+</code></pre></div>
+<h3 id="练习-检查动态输入">练习：检查动态输入<a class="heading-anchor" href="#练习-检查动态输入" aria-label="链接到练习：检查动态输入">#</a></h3>
+<p>上面的例子可以静态知道字符串足够长。但如果字符串和截取长度来自用户输入呢？补全 <code>ok</code> 的实现，确保只有在参数合法时才调用 <code>chop</code>：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">safeChop      :: String -&gt; Int -&gt; String
+safeChop str n
+  | ok        = chop str n
+  | otherwise = &quot;&quot;
+  where
+    ok        = True
+
+queryAndChop  :: IO String
+queryAndChop  = do putStrLn &quot;Give me a string:&quot;
+                   str  &lt;-  getLine
+                   putStrLn &quot;Give me a number:&quot;
+                   ns   &lt;-  getLine
+                   let n =  read ns :: Int
+                   return $ safeChop str n
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明：</strong> 这个练习还说明了静态证明与运行时校验的配合方式：外部数据先检查，检查分支提供后续调用需要的事实。示例仍使用部分函数 <code>read</code> 解析数字，输入不是合法整数时会抛异常；这不在当前长度规格的证明范围内。生产边界应使用能显式报告解析失败的接口。</p>
+</blockquote>
+<h2 id="嵌套的-bytestring">嵌套的 ByteString<a class="heading-anchor" href="#嵌套的-bytestring" aria-label="链接到嵌套的 ByteString">#</a></h2>
+<p>再看一个更深入的例子：<code>group</code> 把 <code>&quot;foobaaar&quot;</code> 这样的字符串变成 <code>[&quot;f&quot;, &quot;oo&quot;, &quot;b&quot;, &quot;aaa&quot;, &quot;r&quot;]</code>，把连续相同的字符分到一组。我们希望证明两条性质：</p>
+<ol>
+<li>返回列表中的每个 <code>ByteString</code> 都非空。</li>
+<li>所有分组的长度之和等于输入长度。</li>
+</ol>
+<p><strong>非空字节串</strong> 就是长度不为零的字节串：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ predicate Null B  = bLen B == 0                   @-}
+{-@ type ByteStringNE = {v:ByteString | not (Null v)} @-}
+</code></pre></div>
+<p>据此可以给 <code>null</code> 检查写一个精确规格：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ null :: b:_ -&gt; {v:Bool | v &lt;=&gt; Null b} @-}
+null (BS _ _ l) = l == 0
+</code></pre></div>
+<p>通过这个检查，就能判断何时可以安全地取出字节串的头部和尾部。精化条件不仅约束操作安全，也跟踪结果长度：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ unsafeHead :: ByteStringNE -&gt; Word8 @-}
+unsafeHead (BS x s _) = unsafePerformIO $
+                          withForeignPtr x $ \p -&gt;
+                            peekByteOff p s
+
+{-@ unsafeTail :: b:ByteStringNE -&gt; ByteStringN {bLen b -1} @-}
+unsafeTail (BS ps s l) = BS ps (s + 1) (l - 1)
+</code></pre></div>
+<blockquote>
+<p>原注：在本章按字节访问的模型中，<code>peekByteOff p i</code> 相当于 <code>peek (plusPtr p i)</code>。</p>
+</blockquote>
+<p><strong>分组函数。</strong> <code>group</code> 递归调用 <code>spanByte</code>，切出下一组，再继续处理剩余部分：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ group :: b:_ -&gt; {v: [ByteStringNE] | bsLen v = bLen b} @-}
+group xs
+    | null xs   = []
+    | otherwise = let  y        = unsafeHead xs
+                       (ys, zs) = spanByte y (unsafeTail xs)
+                  in (y `cons` ys) : group zs
+</code></pre></div>
+<p>结果类型 <code>[ByteStringNE]</code> 表达了“每一组都非空”。另一条要求“长度总和保持不变”，则通过一个数值度量函数表达：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ measure bsLen @-}
+bsLen        :: [ByteString] -&gt; Int
+bsLen []     = 0
+bsLen (b:bs) = bLen b + bsLen bs
+</code></pre></div>
+<p><strong>切分一组。</strong> <code>spanByte</code> 承担主要工作：使用底层指针算术，寻找第一个不同于输入字符 <code>c</code> 的位置，再在这里把字节串切成前缀与后缀。</p>
+<p>如果你已经补全前面相关的类型签名，按照教程的验证目标，即使删掉下面规格中的 <code>assume</code>，实现也应能够通过检查。</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ assume spanByte :: Word8 -&gt; b:ByteString -&gt; ByteString2 b @-}
+spanByte c ps@(BS x s ln)
+  = unsafePerformIO
+      $ withForeignPtr x $ \p -&gt;
+         go (p `plusPtr` s) 0
+  where
+    go p i
+      | i &gt;= ln   = return (ps, empty)
+      | otherwise = do c&#39; &lt;- peekByteOff p i
+                       if c /= c&#39;
+                         then return (splitAt i)
+                         else go p (i+1)
+    splitAt i     = (unsafeTake i ps, unsafeDrop i ps)
+</code></pre></div>
+<p>LiquidHaskell 可以推断循环索引的边界是 <code>0 &lt;= i &lt;= ln</code>，并在真正读内存的分支中得到更严格的范围，从而验证访问安全。此外，<code>unsafeTake</code> 和 <code>unsafeDrop</code> 的精确规格，能让它证明结果二元组的两个长度相加，等于原字节串长度：</p>
+<div class="code-block"><div class="code-toolbar"><span>Haskell</span><button class="copy-code" type="button" aria-label="复制这段代码">复制</button></div><pre><code class="language-haskell">{-@ type ByteString2 B
+      = {v:_ | bLen (fst v) + bLen (snd v) = bLen B} @-}
+</code></pre></div>
+<blockquote>
+<p><strong>译者说明：</strong> 上游实际代码仍保留 <code>assume spanByte</code>。在补完前面练习、移除这一假设并重新运行检查之前，不能把 <code>spanByte</code> 的实现声称为已经验证。这里的两条输出性质也没有独自表达“相同字节一定分在一起、元素顺序完全保持”等全部分组语义；想证明这些，需要更强的规格。</p>
+</blockquote>
+<h2 id="回顾-用类型约束越界">回顾：用类型约束越界<a class="heading-anchor" href="#回顾-用类型约束越界" aria-label="链接到回顾：用类型约束越界">#</a></h2>
+<p>本章展示了如何用度量函数和精化条件，约束 Haskell 中较底层的指针算术。方法可以概括为：</p>
+<ol>
+<li>用多个较小层次组合成更大的系统。</li>
+<li>为每一层设计精化 API。</li>
+<li>用下层的 API 设计和验证上层代码。</li>
+</ol>
+<p>我们先建立底层 <code>Pointer</code> API，再实现高效的 <code>ByteString</code> API，最后在字节串之上实现应用层功能。</p>
+<p>这种方法仍然有 <strong>受信任计算基（Trusted Computing Base）</strong>：例如通过 FFI 使用、而实现不在本验证范围内的 <code>mallocForeignPtrBytes</code>、<code>peek</code>、<code>poke</code>。我们假设这些底层操作满足 API，然后证明其余部分相对于这些 API 的正确性。</p>
+<p>原文希望表达的验证目标是：底层 FFI 签名作为可信边界，上层实现则交给 LiquidHaskell 验证。</p>
+<blockquote>
+<p><strong>译者说明：</strong> 这是一种分层验证目标，不能直接当成当前练习源码已经完成的事实。除了外部实现，当前源码中的 <code>assume</code>、尚未补全的练习、关闭的终止性检查，以及编译器、求解器和规格本身，都属于评估整体保证时需要考虑的边界。网站展示不代表已在当前工具链上重新完成全部证明。</p>
+</blockquote>
+</article><nav class="chapter-pagination" aria-label="章节翻页"><a href="Tutorial_10_Case_Study_Associative_Maps.html"><small>上一章</small><strong>10 键值映射</strong></a><a href="Tutorial_12_Case_Study_AVL.html"><small>下一章</small><strong>12 AVL 树</strong></a></nav><footer class="page-footer"><p>原著 Ranjit Jhala 与贡献者 · 中文翻译与讲解</p><p><a href="about.html">来源与译本说明</a><span>·</span><a href="LICENSE">MIT License</a><span>·</span><a href="https://ucsd-progsys.github.io/liquidhaskell-tutorial/Tutorial_01_Introduction.html">英文教程</a></p></footer></main><aside class="toc" aria-label="本页目录"><p>本页内容</p><nav><a class="toc-depth-2" href="#haskell-也可能发生类似-heartbleed-的问题">Haskell 也可能发生类似 Heartbleed 的问题</a><a class="toc-depth-2" href="#底层指针-api">底层指针 API</a><a class="toc-depth-2" href="#为指针-api-添加精化约束">为指针 API 添加精化约束</a><a class="toc-depth-2" href="#假设与保证">假设与保证</a><a class="toc-depth-2" href="#bytestring-api">ByteString API</a><a class="toc-depth-3" href="#练习-合法的-bytestring">练习：合法的 ByteString</a><a class="toc-depth-3" href="#工具提示-字段也能提供度量信息">工具提示：字段也能提供度量信息</a><a class="toc-depth-3" href="#练习-创建">练习：创建（★）</a><a class="toc-depth-3" href="#练习-打包后的长度">练习：打包后的长度</a><a class="toc-depth-3" href="#练习-打包循环的不变量">练习：打包循环的不变量（★）</a><a class="toc-depth-3" href="#练习-unsafetake-与-unsafedrop">练习：unsafeTake 与 unsafeDrop</a><a class="toc-depth-3" href="#练习-解包">练习：解包（★）</a><a class="toc-depth-2" href="#应用层-api">应用层 API</a><a class="toc-depth-3" href="#练习-截取后的长度">练习：截取后的长度</a><a class="toc-depth-3" href="#练习-检查动态输入">练习：检查动态输入</a><a class="toc-depth-2" href="#嵌套的-bytestring">嵌套的 ByteString</a><a class="toc-depth-2" href="#回顾-用类型约束越界">回顾：用类型约束越界</a></nav><a class="back-top" href="#main-content">回到顶部 ↑</a></aside></div>
+  <button class="nav-backdrop" id="nav-backdrop" aria-label="关闭章节导航" tabindex="-1" hidden></button>
+  <dialog class="search-dialog" id="search-dialog" aria-labelledby="search-title"><div class="search-dialog-header"><h2 id="search-title">搜索教程</h2><button class="dialog-close" id="search-close" aria-label="关闭搜索">Esc</button></div><label for="search-input" class="sr-only">输入中文、英文或代码名称</label><div class="search-input-wrap"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.7" cy="10.7" r="6.7"/><path d="m16 16 4.5 4.5"/></svg><input id="search-input" type="search" placeholder="试试「不变量」、measure、ByteString…" autocomplete="off"></div><p class="search-status" id="search-status" role="status">搜索全部章节与术语；多个关键词用空格分隔。</p><ol id="search-results" class="search-results"></ol></dialog>
+  <div class="sr-only" id="live-status" aria-live="polite"></div>
+</body>
+</html>

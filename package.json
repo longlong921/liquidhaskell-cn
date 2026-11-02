@@ -1,0 +1,13 @@
+{
+  "name": "liquidhaskell-cn",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "LiquidHaskell 中文教程：完整译文、原文对照与离线静态网页",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "python3 scripts/check.py"
+  },
+  "engines": { "node": ">=20" },
+  "license": "MIT"
+}
